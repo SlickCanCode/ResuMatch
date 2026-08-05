@@ -74,14 +74,13 @@ const stats = [
 
 export default function DashboardPage() {
 
- const {user, setUser} = useUserContext();
 
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Welcome back, {user?.userName}</h1>
+          <h1 className="text-2xl font-bold">Welcome back, User</h1>
           <p className="text-muted-foreground">
             Here&apos;s an overview of your resume analysis activity.
           </p>
