@@ -24,9 +24,13 @@ export function UserProvider({
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
-    if (storedUser != undefined) {
-      setUser(JSON.parse(storedUser));
-    }
+    if (
+    storedUser &&
+    storedUser !== "undefined" &&
+    storedUser !== "null"
+  ) {
+    setUser(JSON.parse(storedUser));
+  }
   }, []);
 
   return (
