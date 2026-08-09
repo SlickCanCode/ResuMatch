@@ -10,10 +10,6 @@ export function Hero() {
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-full text-sm text-muted-foreground">
-              <Sparkles className="w-4 h-4 text-accent" />
-              AI-Powered Resume Analysis
-            </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-balance">
               Optimize Your Resume with{" "}
