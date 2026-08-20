@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, FileText, Loader2, X, ArrowRight } from "lucide-react";
+import { uploadResume } from "@/lib/resumeApi";
 
 export default function NewAnalysisPage() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function NewAnalysisPage() {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && (droppedFile.type === "application/pdf" || droppedFile.name.endsWith(".docx"))) {
       setFile(droppedFile);
+      //call handleUpload
     }
   };
 
@@ -35,8 +37,10 @@ export default function NewAnalysisPage() {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      //call handleUpload
     }
   };
+
 
   const handleAnalyze = async () => {
     if (!file) return;

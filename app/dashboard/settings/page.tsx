@@ -16,8 +16,10 @@ import {
   CreditCard,
   Loader2
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function SettingsPage() {
+  const { data: user } = useCurrentUser();
   const [isSaving, setIsSaving] = useState(false);
   const [notifications, setNotifications] = useState({
     email: true,
@@ -55,7 +57,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16">
               <AvatarFallback className="text-lg bg-accent text-accent-foreground">
-                JD
+                {user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : ""}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -69,17 +71,17 @@ export default function SettingsPage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First name</Label>
-              <Input id="firstName" defaultValue="John" />
+              <Input id="firstName" defaultValue={user?.firstName ?? ""} key={user?.id} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last name</Label>
-              <Input id="lastName" defaultValue="Doe" />
+              <Input id="lastName" defaultValue={user?.lastName ?? ""} key={user?.id} />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" defaultValue="john@example.com" />
+            <Input id="email" type="email" defaultValue={user?.email ?? ""} key={user?.id} />
           </div>
 
           <div className="flex justify-end">

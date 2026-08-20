@@ -5,6 +5,8 @@ import {Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Check, Eye, EyeOff, FileText, Loader2, Lock } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ApiError } from "@/lib/api-client";
+import { resetPassword } from "@/lib/authApi";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -17,8 +19,6 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const resetToken = searchParams.get("rt");
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL!;
-
   if (!resetToken) {
     window.location.href = "/login";
   }
@@ -51,32 +51,18 @@ export default function ResetPasswordPage() {
   ) => {
     e.preventDefault();
 
-    if (!canSubmit) return;
+    if (!canSubmit || !resetToken) return;
     const newPassword = password;
     setIsLoading(true);
 
-    const response = await fetch(
-        `${API_URL}/api/v1/auth/reset-password`,
-        {
-          method: "PATCH",
-          credentials: "include", // Sends the HttpOnly access_token cookie
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            newPassword,
-            resetToken
-          }),
-        }
-      );
-
-      if (response.ok) {
+    try {
+      await resetPassword(newPassword, resetToken);
         window.location.href = "/login";
-      } else {
-        const result = await response.json();
-        setError(result.message || "Failed to reset password. Please try again.");
+      } catch (error) {
+        setError(error instanceof ApiError ? error.message : "Failed to reset password. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
-    setIsLoading(false);
 
   };
 

@@ -20,6 +20,7 @@ import {
   Download,
   Loader2,
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 // Mock resume data
 const resumeData = {
@@ -28,6 +29,9 @@ const resumeData = {
   phone: "+1 (555) 123-4567",
   location: "San Francisco, CA",
   summary: "Experienced software engineer with 5+ years of expertise in building scalable web applications using React, Node.js, and cloud technologies.",
+  online_profiles: [
+    { platform: "LinkedIn", url: "https://www.linkedin.com/in/johndoe" },
+  ],
   skills: ["JavaScript", "TypeScript", "React", "Node.js", "Python", "AWS", "Docker", "PostgreSQL", "GraphQL", "Git"],
   experience: [
     {
@@ -65,7 +69,6 @@ const analysisData = {
   overallScore: 87,
   atsScore: 92,
   keywordScore: 78,
-  formatScore: 95,
   strengths: [
     "Strong quantifiable achievements in experience section",
     "Well-structured and easy to read format",
@@ -108,6 +111,7 @@ const analysisData = {
 };
 
 export default function AnalysisPage() {
+  const { data: user } = useCurrentUser();
   const [isAnalyzingJob, setIsAnalyzingJob] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [jobMatchResult, setJobMatchResult] = useState<{
@@ -175,8 +179,10 @@ export default function AnalysisPage() {
             <CardContent className="space-y-6">
               {/* Contact Info */}
               <div>
-                <h3 className="font-semibold text-lg">{resumeData.name}</h3>
-                <p className="text-sm text-muted-foreground">{resumeData.email}</p>
+                <h3 className="font-semibold text-lg">
+                  {user ? `${user.firstName} ${user.lastName}` : "Loading..."}
+                </h3>
+                <p className="text-sm text-muted-foreground">{user?.email ?? ""}</p>
                 <p className="text-sm text-muted-foreground">{resumeData.phone}</p>
                 <p className="text-sm text-muted-foreground">{resumeData.location}</p>
               </div>
@@ -268,14 +274,6 @@ export default function AnalysisPage() {
                 <p className="text-xs text-muted-foreground mb-1">Keywords</p>
                 <p className={`text-3xl font-bold ${getScoreColor(analysisData.keywordScore)}`}>
                   {analysisData.keywordScore}%
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground mb-1">Format</p>
-                <p className={`text-3xl font-bold ${getScoreColor(analysisData.formatScore)}`}>
-                  {analysisData.formatScore}%
                 </p>
               </CardContent>
             </Card>

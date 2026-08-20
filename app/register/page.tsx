@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import {Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { FileText, Eye, EyeOff, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { ApiError } from "@/lib/api-client";
+import { getGoogleOAuthUrl, registerUser } from "@/lib/authApi";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,38 +18,29 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
-    console.log("Submitting...");
     event.preventDefault();
 
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
-    console.log("Form Data:", data);
+    const formData = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formData.entries()) as {
+      firstName: string;
+      lastName: string;
+      email: string;
+      password: string;
+    };
     setIsLoading(true);
-    // Connect to backend API to authenticate user 
-    try {
-    const response = await fetch("http://localhost:8080/api/v1/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(data)
-    });
-     const result = await response.json();
-    console.log("Response:", result);
-    if (response.status === 201) {
-      const email = result.email;
-      router.push(
-        `/verify-email?email=${encodeURIComponent(email)}&purpose=register`
-      );
 
-    } else{
-      setError(result.message[0] || "Signup failed. Please try again.");
+    try {
+      const result = await registerUser(data);
+      router.push(
+        `/verify-email?email=${encodeURIComponent(result.email)}&purpose=register`
+      );
+    } catch (error) {
+      setError(error instanceof ApiError
+        ? error.message
+        : "Failed to connect to server, please check your internet connection.");
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error("Error:", error);
-    setError("Failed to connect to server, pls check your internet connection.");
-  }
-  setIsLoading(false);
   };
 
   
@@ -193,7 +186,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex justify-center">
-            <Button variant="outline" className="h-11 w-full max-w-xs cursor-pointer" onClick={() => window.location.href = "http://localhost:8080/oauth2/authorization/google"}>
+            <Button variant="outline" className="h-11 w-full max-w-xs cursor-pointer" onClick={() => window.location.href = getGoogleOAuthUrl()}>
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"

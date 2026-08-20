@@ -4,13 +4,13 @@ import {Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, FileText, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { ApiError } from "@/lib/api-client";
+import { sendOtp } from "@/lib/authApi";
 
 export default function ForgotPassworPage() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL!;
-
   const handleSubmit = async (
     e: React.SubmitEvent<HTMLFormElement>
   ) => {
@@ -20,22 +20,14 @@ export default function ForgotPassworPage() {
 
     setIsLoading(true);
 
-    const response = await fetch(`${API_URL}/api/v1/auth/send-otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (response.ok) {
+    try {
+      await sendOtp(email);
           window.location.href = `/verify-email?email=${encodeURIComponent(email)}&purpose=reset-password`;
-    } else 
-      {
-      const result = await response.json();
-      setError(result.message);
+    } catch (error) {
+      setError(error instanceof ApiError ? error.message : "Failed to send verification code.");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
 
   };
 

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { FileText, Eye, EyeOff } from "lucide-react";
+import { ApiError } from "@/lib/api-client";
+import { getGoogleOAuthUrl, loginUser } from "@/lib/authApi";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,33 +18,23 @@ export default function LoginPage() {
   const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData.entries());
+    const formData = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formData.entries()) as {
+      email: string;
+      password: string;
+    };
     setIsLoading(true);
-    // Connect to backend API to authenticate user 
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", 
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        window.location.href = "/dashboard";
-      } else {
-        const result = await response.json();
-        setError(result.message || "Login failed. Please try again.");
-      }
+      await loginUser(data);
+      window.location.href = "/dashboard";
     } catch (error) {
-      console.error(error);
-      setError("Couldn't connect to server. Please check your internet connection.");
+      setError(error instanceof ApiError
+        ? error.message
+        : "Couldn't connect to server. Please check your internet connection.");
+    } finally {
+      setIsLoading(false);
     }
-
-  setIsLoading(false);
   };
 
   return (
@@ -62,7 +54,7 @@ export default function LoginPage() {
               Sign in to continue to your dashboard
             </p>
           </div>
-         {/* " && shows second value if first value is truthy" */}
+          
           {error && (
            <Alert variant="destructive">
               <AlertTitle>Login Failed</AlertTitle>
@@ -135,7 +127,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex justify-center">
-            <Button variant="outline" className="h-11 w-full max-w-xs cursor-pointer" onClick={() => window.location.href = "http://localhost:8080/oauth2/authorization/google"}>
+            <Button variant="outline" className="h-11 w-full max-w-xs cursor-pointer" onClick={() => window.location.href = getGoogleOAuthUrl()}>
               <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                 <path
                   fill="currentColor"

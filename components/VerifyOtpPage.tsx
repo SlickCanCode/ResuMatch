@@ -5,6 +5,8 @@ import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { useRouter } from "next/navigation";
+import { ApiError } from "@/lib/api-client";
+import { sendOtp, verifyOtp as verifyOtpRequest } from "@/lib/authApi";
 
 export default function VerifyOtpPage() {
   const OTP_LENGTH = 6;
@@ -21,8 +23,6 @@ export default function VerifyOtpPage() {
   const [timeLeft, setTimeLeft] = useState(60);
   const [isLoading, setIsLoading] = useState(false);
   const [error,setError] = useState("");
-  const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL!;
-
   const maskEmail = (email: string) => {
     if (!email) return "";
 
@@ -115,35 +115,25 @@ export default function VerifyOtpPage() {
     const otp = verificationCode ?? code.join("");
     setIsLoading(true);
 
-    const response = await fetch(`${API_URL}/api/v1/auth/verify-otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include", 
-      body: JSON.stringify({
+    try {
+      const result = await verifyOtpRequest({
         otp,
-        email,
-        purpose,
-      }),
-    });
+        email: email ?? "",
+        purpose: purpose ?? "",
+      });
 
-     if (response.ok) {
-       const result = await response.json();
-          if (purpose === "register") {
-      window.location.href = "/dashboard";
-    } else if (purpose === "reset-password") {
-        const resetToken = result.resetToken;
-            router.push(
-        `/login/recovery/reset-password?rt=${encodeURIComponent(resetToken)}`
-      );
-
-    }
-    } else {
-      const result = await response.json();
-      setError(result.message);
-    }
+      if (purpose === "register") {
+        window.location.href = "/dashboard";
+      } else if (purpose === "reset-password" && result.resetToken) {
+        router.push(
+          `/login/recovery/reset-password?rt=${encodeURIComponent(result.resetToken)}`
+        );
+      }
+    } catch (error) {
+      setError(error instanceof ApiError ? error.message : "Failed to verify code.");
+    } finally {
       setIsLoading(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -153,23 +143,14 @@ export default function VerifyOtpPage() {
   const handleResend = async () => {
     if (timeLeft > 0) return;
 
-
-    const response = await fetch(`${API_URL}/api/v1/auth/send-otp`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!response.ok) {
-      const result = await response.json();
-      setError(result.message);
-      console.error("Error:", error);
+    try {
+      await sendOtp(email ?? "");
+      setCode(Array(OTP_LENGTH).fill(""));
+      setTimeLeft(60);
+      inputs.current[0]?.focus();
+    } catch (error) {
+      setError(error instanceof ApiError ? error.message : "Failed to resend code.");
     }
-    setCode(Array(OTP_LENGTH).fill(""));
-    setTimeLeft(60);
-    inputs.current[0]?.focus();
   };
 
   const formattedTime = `${String(Math.floor(timeLeft / 60)).padStart(

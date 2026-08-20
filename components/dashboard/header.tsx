@@ -23,7 +23,7 @@ import {
   History, 
   Settings 
 } from "lucide-react";
-import { useUserContext } from "@/app/dashboard/UserContext";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -35,7 +35,10 @@ const navItems = [
 export function Header() {
   const pathname = usePathname();
   
-  const {user, setUser} = useUserContext();
+  const { data: user } = useCurrentUser();
+  const initials = user
+    ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
+    : "";
 
   return (
     <header className="sticky top-0 z-40 h-16 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 lg:px-6">
@@ -100,7 +103,7 @@ export function Header() {
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
                 <AvatarFallback className="bg-accent text-accent-foreground">
-                  JD
+                  {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -108,8 +111,10 @@ export function Header() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">{user?.userName}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-sm font-medium">
+                  {user ? `${user.firstName} ${user.lastName}` : "Loading..."}
+                </p>
+                <p className="text-xs text-muted-foreground">{user?.email ?? ""}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
