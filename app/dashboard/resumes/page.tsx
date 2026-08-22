@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useResumes } from "@/hooks/useResumes";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,62 +25,35 @@ import {
   Grid3X3,
   List,
   BarChart3,
+  Loader2,
 } from "lucide-react";
-
-const resumes = [
-  {
-    id: 1,
-    fileName: "Software_Engineer_Resume.pdf",
-    uploadDate: "May 5, 2026",
-    lastAnalyzed: "2 hours ago",
-    latestScore: 87,
-    analysisCount: 5,
-  },
-  {
-    id: 2,
-    fileName: "Product_Manager_CV.pdf",
-    uploadDate: "May 3, 2026",
-    lastAnalyzed: "Yesterday",
-    latestScore: 72,
-    analysisCount: 3,
-  },
-  {
-    id: 3,
-    fileName: "Data_Analyst_Resume.pdf",
-    uploadDate: "May 1, 2026",
-    lastAnalyzed: "3 days ago",
-    latestScore: 95,
-    analysisCount: 4,
-  },
-  {
-    id: 4,
-    fileName: "UX_Designer_Portfolio.pdf",
-    uploadDate: "Apr 28, 2026",
-    lastAnalyzed: "1 week ago",
-    latestScore: 68,
-    analysisCount: 2,
-  },
-];
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function ResumesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const isMobile = useIsMobile();
+  const { data: resumes = [], isPending, isError, error, refetch } = useResumes();
 
   const filteredResumes = resumes.filter((resume) =>
-    resume.fileName.toLowerCase().includes(searchQuery.toLowerCase())
+    resume.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number | null) => {
+    if (score === null) return "text-muted-foreground";
     if (score >= 90) return "text-success";
     if (score >= 70) return "text-warning";
     return "text-destructive";
   };
 
-  const getScoreBgColor = (score: number) => {
+  const getScoreBgColor = (score: number | null) => {
+    if (score === null) return "bg-secondary";
     if (score >= 90) return "bg-success/10";
     if (score >= 70) return "bg-warning/10";
     return "bg-destructive/10";
   };
+
+  const scoreLabel = (score: number | null) => score === null ? "Not analyzed" : `${score}%`;
 
   return (
     <div className="space-y-6">
@@ -97,6 +72,20 @@ export default function ResumesPage() {
         </Button>
       </div>
 
+      {isPending ? (
+        <div className="flex min-h-64 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-accent" />
+        </div>
+      ) : isError ? (
+        <Alert variant="destructive">
+          <AlertTitle>Unable to load resumes</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => refetch()}>
+            Try again
+          </Button>
+        </Alert>
+      ) : (
+      <>
       {/* Search and View Toggle */}
       <Card>
         <CardContent className="p-4">
@@ -122,6 +111,7 @@ export default function ResumesPage() {
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
+                className="hidden md:inline-flex"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -132,7 +122,7 @@ export default function ResumesPage() {
 
       {/* Resumes Grid/List */}
       {filteredResumes.length > 0 ? (
-        viewMode === "grid" ? (
+        isMobile || viewMode === "grid" ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredResumes.map((resume) => (
               <Card key={resume.id} className="hover:shadow-lg transition-shadow">
@@ -166,7 +156,7 @@ export default function ResumesPage() {
                     </DropdownMenu>
                   </div>
 
-                  <h3 className="font-medium text-sm mb-1 truncate">{resume.fileName}</h3>
+                    <h3 className="font-medium text-sm mb-1 truncate">{resume.name}</h3>
                   <p className="text-xs text-muted-foreground mb-4">
                     Uploaded {resume.uploadDate}
                   </p>
@@ -175,7 +165,7 @@ export default function ResumesPage() {
                     <div>
                       <p className="text-xs text-muted-foreground">Latest Score</p>
                       <p className={`text-xl font-bold ${getScoreColor(resume.latestScore)}`}>
-                        {resume.latestScore}%
+                        {scoreLabel(resume.latestScore)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -188,7 +178,7 @@ export default function ResumesPage() {
                     <Button variant="outline" size="sm" className="flex-1" asChild>
                       <Link href={`/dashboard/analysis/${resume.id}`}>
                         <BarChart3 className="w-4 h-4 mr-1" />
-                        Analyze
+                        View Analysis
                       </Link>
                     </Button>
                   </div>
@@ -215,9 +205,9 @@ export default function ResumesPage() {
                         <FileText className={`w-5 h-5 ${getScoreColor(resume.latestScore)}`} />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{resume.fileName}</p>
+                        <p className="font-medium text-sm truncate">{resume.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          Uploaded {resume.uploadDate} • Last analyzed {resume.lastAnalyzed}
+                          Uploaded {resume.uploadDate}
                         </p>
                       </div>
                     </div>
@@ -227,7 +217,7 @@ export default function ResumesPage() {
                         <div className="text-center">
                           <p className="text-xs text-muted-foreground">Score</p>
                           <p className={`font-semibold ${getScoreColor(resume.latestScore)}`}>
-                            {resume.latestScore}%
+                            {scoreLabel(resume.latestScore)}
                           </p>
                         </div>
                         <div className="text-center">
@@ -240,7 +230,7 @@ export default function ResumesPage() {
                         <Button variant="ghost" size="sm" asChild>
                           <Link href={`/dashboard/analysis/${resume.id}`}>
                             <BarChart3 className="w-4 h-4 mr-1" />
-                            Analyze
+                            View Analysis
                           </Link>
                         </Button>
                         <DropdownMenu>
@@ -275,11 +265,11 @@ export default function ResumesPage() {
               <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">No resumes found</h3>
+                <h3 className="font-semibold text-lg mb-2">{searchQuery ? "No resumes found" : "No resumes yet"}</h3>
               <p className="text-muted-foreground text-sm mb-4">
                 {searchQuery
                   ? "Try adjusting your search query."
-                  : "Upload your first resume to get started."}
+                  : "Upload your resume and get real-time analysis."}
               </p>
               {!searchQuery && (
                 <Button asChild>
@@ -289,6 +279,8 @@ export default function ResumesPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+      </>
       )}
     </div>
   );

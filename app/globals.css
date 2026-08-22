@@ -128,6 +128,18 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  button:not(:disabled),
+  a {
+    transition: transform 120ms ease, opacity 120ms ease;
+  }
+
+  button:not(:disabled):active,
+  a:active {
+    transform: scale(0.98);
+    opacity: 0.86;
+  }
+
   body {
     @apply bg-background text-foreground;
   }

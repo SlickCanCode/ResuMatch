@@ -26,6 +26,7 @@ export function useRecentAnalyses(): UseRecentAnalysesResult {
       setRecentAnalyses(
         res.map((a) => ({
           id: a.id,
+          resumeId: a.resumeId,
           name: a.fileName,
           score: a.resumeScore,
           atsScore: a.atsScore,

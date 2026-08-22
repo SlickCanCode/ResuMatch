@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useAnalysisSummaries } from "@/hooks/useAnalysisSummaries";
+import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,80 +23,16 @@ import {
   Download,
   Trash2,
   Calendar,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Upload,
+  Loader2,
 } from "lucide-react";
-
-const analysisHistory = [
-  {
-    id: 1,
-    fileName: "Software_Engineer_Resume.pdf",
-    date: "May 5, 2026",
-    time: "2:30 PM",
-    overallScore: 87,
-    atsScore: 92,
-    previousScore: 82,
-    status: "completed",
-  },
-  {
-    id: 2,
-    fileName: "Product_Manager_CV.pdf",
-    date: "May 3, 2026",
-    time: "10:15 AM",
-    overallScore: 72,
-    atsScore: 78,
-    previousScore: 72,
-    status: "completed",
-  },
-  {
-    id: 3,
-    fileName: "Data_Analyst_Resume.pdf",
-    date: "May 1, 2026",
-    time: "4:45 PM",
-    overallScore: 95,
-    atsScore: 98,
-    previousScore: 88,
-    status: "completed",
-  },
-  {
-    id: 4,
-    fileName: "UX_Designer_Portfolio.pdf",
-    date: "Apr 28, 2026",
-    time: "9:00 AM",
-    overallScore: 68,
-    atsScore: 65,
-    previousScore: 75,
-    status: "completed",
-  },
-  {
-    id: 5,
-    fileName: "Marketing_Manager_Resume.pdf",
-    date: "Apr 25, 2026",
-    time: "3:20 PM",
-    overallScore: 81,
-    atsScore: 85,
-    previousScore: null,
-    status: "completed",
-  },
-  {
-    id: 6,
-    fileName: "Frontend_Developer_CV.pdf",
-    date: "Apr 20, 2026",
-    time: "11:30 AM",
-    overallScore: 89,
-    atsScore: 91,
-    previousScore: 85,
-    status: "completed",
-  },
-];
 
 export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: analysisHistory = [], isPending, isError, error, refetch } = useAnalysisSummaries();
 
   const filteredHistory = analysisHistory.filter((item) =>
-    item.fileName.toLowerCase().includes(searchQuery.toLowerCase())
+    item.resumeName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getScoreColor = (score: number) => {
@@ -106,13 +45,6 @@ export default function HistoryPage() {
     if (score >= 90) return "bg-success/10 text-success";
     if (score >= 70) return "bg-warning/10 text-warning-foreground";
     return "bg-destructive/10 text-destructive";
-  };
-
-  const getTrendIcon = (current: number, previous: number | null) => {
-    if (previous === null) return <Minus className="w-4 h-4 text-muted-foreground" />;
-    if (current > previous) return <TrendingUp className="w-4 h-4 text-success" />;
-    if (current < previous) return <TrendingDown className="w-4 h-4 text-destructive" />;
-    return <Minus className="w-4 h-4 text-muted-foreground" />;
   };
 
   return (
@@ -150,7 +82,19 @@ export default function HistoryPage() {
       </Card>
 
       {/* History List */}
-      {filteredHistory.length > 0 ? (
+      {isPending ? (
+        <div className="flex min-h-64 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-accent" />
+        </div>
+      ) : isError ? (
+        <Alert variant="destructive">
+          <AlertTitle>Unable to load analysis history</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => refetch()}>
+            Try again
+          </Button>
+        </Alert>
+      ) : filteredHistory.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -169,10 +113,10 @@ export default function HistoryPage() {
                       <FileText className="w-5 h-5 text-muted-foreground" />
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{item.fileName}</p>
+                      <p className="font-medium text-sm truncate">{item.resumeName}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                         <Calendar className="w-3 h-3" />
-                        {item.date} at {item.time}
+                        {formatRelativeTime(item.dateTime)}
                       </div>
                     </div>
                   </div>
@@ -182,10 +126,9 @@ export default function HistoryPage() {
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground">Score</p>
                         <div className="flex items-center gap-1">
-                          <span className={`font-semibold ${getScoreColor(item.overallScore)}`}>
-                            {item.overallScore}%
+                          <span className={`font-semibold ${getScoreColor(item.score)}`}>
+                            {item.score}%
                           </span>
-                          {getTrendIcon(item.overallScore, item.previousScore)}
                         </div>
                       </div>
                       <div className="text-center">
@@ -198,7 +141,7 @@ export default function HistoryPage() {
 
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/dashboard/analysis/${item.id}`}>
+                        <Link href={`/dashboard/analysis/${item.resumeId}`}>
                           <Eye className="w-4 h-4 mr-1" />
                           View
                         </Link>
@@ -234,15 +177,15 @@ export default function HistoryPage() {
               <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">No analyses found</h3>
+              <h3 className="font-semibold text-lg mb-2">{searchQuery ? "No analyses found" : "No analyses yet"}</h3>
               <p className="text-muted-foreground text-sm mb-4">
                 {searchQuery 
                   ? "Try adjusting your search query." 
-                  : "Upload a resume to get started with your first analysis."}
+                  : "Upload your resume and get real-time analysis."}
               </p>
               {!searchQuery && (
                 <Button asChild>
-                  <Link href="/dashboard/analysis/new">Upload Resume</Link>
+                  <Link href="/dashboard/resumes">My Resume's</Link>
                 </Button>
               )}
             </div>

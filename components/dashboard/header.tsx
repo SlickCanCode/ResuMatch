@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Menu } from "lucide-react";
+import { Search, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -24,6 +32,7 @@ import {
   Settings 
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useState } from "react";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -34,6 +43,7 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const { data: user } = useCurrentUser();
   const initials = user
@@ -43,13 +53,17 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 h-16 bg-background/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-4">
-        <Sheet>
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Dashboard navigation</SheetTitle>
+              <SheetDescription>Navigate through your ResuMatch dashboard.</SheetDescription>
+            </SheetHeader>
             <div className="h-16 flex items-center border-b border-border px-4">
               <Link href="/dashboard" className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -64,32 +78,36 @@ export function Header() {
                   (item.href !== "/dashboard" && pathname.startsWith(item.href));
                 
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
-                      isActive 
-                        ? "bg-secondary text-foreground" 
-                        : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                    )}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </Link>
+                  <SheetClose key={item.href} asChild>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all active:scale-[0.98] active:opacity-80",
+                        isActive
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SheetClose>
                 );
               })}
             </nav>
+            <div className="mt-auto border-t border-border p-3">
+              <SheetClose asChild>
+                <Link
+                  href="/"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary/50 hover:text-foreground active:scale-[0.98] active:opacity-80"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Sign out</span>
+                </Link>
+              </SheetClose>
+            </div>
           </SheetContent>
         </Sheet>
-        
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search resumes..." 
-            className="w-64 pl-9 h-9 bg-secondary border-0"
-          />
-        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -120,9 +138,6 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/dashboard/settings">Settings</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="#">Billing</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

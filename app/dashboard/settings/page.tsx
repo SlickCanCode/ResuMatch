@@ -54,20 +54,6 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="w-16 h-16">
-              <AvatarFallback className="text-lg bg-accent text-accent-foreground">
-                {user ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase() : ""}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <Button variant="outline" size="sm">Change Avatar</Button>
-              <p className="text-xs text-muted-foreground mt-1">
-                JPG, PNG or GIF. Max 2MB.
-              </p>
-            </div>
-          </div>
-
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First name</Label>
@@ -100,7 +86,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Notification Settings */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Bell className="w-5 h-5" />
@@ -156,7 +142,7 @@ export default function SettingsPage() {
             />
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Subscription */}
       <Card>
@@ -182,7 +168,7 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
-            <Button>Upgrade to Pro</Button>
+            <Button disabled>Upgrade to Pro</Button>
           </div>
 
           <div className="text-sm text-muted-foreground">

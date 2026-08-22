@@ -1,143 +1,128 @@
 "use client";
 
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import {
   FileText,
   Target,
   Sparkles,
   AlertCircle,
   CheckCircle2,
-  TrendingUp,
   Briefcase,
   GraduationCap,
   Code,
   Download,
   Loader2,
+  ArrowRight,
+  TrendingUp,
 } from "lucide-react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-
-// Mock resume data
-const resumeData = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  phone: "+1 (555) 123-4567",
-  location: "San Francisco, CA",
-  summary: "Experienced software engineer with 5+ years of expertise in building scalable web applications using React, Node.js, and cloud technologies.",
-  online_profiles: [
-    { platform: "LinkedIn", url: "https://www.linkedin.com/in/johndoe" },
-  ],
-  skills: ["JavaScript", "TypeScript", "React", "Node.js", "Python", "AWS", "Docker", "PostgreSQL", "GraphQL", "Git"],
-  experience: [
-    {
-      title: "Senior Software Engineer",
-      company: "Tech Corp",
-      period: "2021 - Present",
-      highlights: [
-        "Led development of microservices architecture serving 1M+ users",
-        "Reduced deployment time by 60% through CI/CD improvements",
-        "Mentored team of 5 junior developers"
-      ]
-    },
-    {
-      title: "Software Engineer",
-      company: "StartupXYZ",
-      period: "2019 - 2021",
-      highlights: [
-        "Built real-time data pipeline processing 100K events/second",
-        "Implemented OAuth 2.0 authentication system",
-        "Improved application performance by 40%"
-      ]
-    }
-  ],
-  education: [
-    {
-      degree: "B.S. Computer Science",
-      school: "Stanford University",
-      year: "2019"
-    }
-  ]
-};
-
-// Mock analysis data
-const analysisData = {
-  overallScore: 87,
-  atsScore: 92,
-  keywordScore: 78,
-  strengths: [
-    "Strong quantifiable achievements in experience section",
-    "Well-structured and easy to read format",
-    "Relevant technical skills clearly listed",
-    "Good use of action verbs"
-  ],
-  weaknesses: [
-    "Summary could be more impactful with specific metrics",
-    "Missing some industry-standard keywords",
-    "Could add more recent certifications"
-  ],
-  missingKeywords: ["Agile", "Scrum", "CI/CD", "Kubernetes", "REST API", "Unit Testing"],
-  foundKeywords: ["JavaScript", "React", "Node.js", "AWS", "Docker", "PostgreSQL", "Microservices", "GraphQL"],
-  grammarIssues: [
-    { text: "Led development of microservices", suggestion: "Consider adding 'the' before 'development'" },
-    { text: "Reduced deployment time", suggestion: "Great use of metrics! Keep this pattern" }
-  ],
-  recommendations: [
-    {
-      title: "Add Quantifiable Metrics to Summary",
-      description: "Include specific numbers like '5+ years of experience' and 'served 1M+ users' in your summary section.",
-      impact: "high"
-    },
-    {
-      title: "Include Missing Keywords",
-      description: "Add keywords like 'Agile', 'Scrum', and 'REST API' to improve ATS matching.",
-      impact: "high"
-    },
-    {
-      title: "Expand Education Section",
-      description: "Consider adding relevant coursework, GPA (if above 3.5), or academic achievements.",
-      impact: "medium"
-    },
-    {
-      title: "Add Certifications",
-      description: "Include any relevant certifications like AWS Certified Developer or similar credentials.",
-      impact: "medium"
-    }
-  ]
-};
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useResume } from "@/hooks/useResume";
+import { analyzeResume, getAnalysis } from "@/lib/resumeApi";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Textarea } from "@/components/ui/textarea";
+import { ApiError } from "@/lib/api-client";
 
 export default function AnalysisPage() {
-  const { data: user } = useCurrentUser();
-  const [isAnalyzingJob, setIsAnalyzingJob] = useState(false);
+  const params = useParams<{ id: string }>();
+  const resumeId = params.id;
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [jobDescription, setJobDescription] = useState("");
-  const [jobMatchResult, setJobMatchResult] = useState<{
-    matchScore: number;
-    matchingSkills: string[];
-    missingSkills: string[];
-    recommendations: string[];
-  } | null>(null);
+  const { data: resume, isPending: isResumePending, error: resumeError } = useResume(resumeId);
+  const { data: analysisData, isPending: isAnalysisPending, error: analysisError } = useQuery({
+    queryKey: ["analysis", resumeId],
+    queryFn: () => getAnalysis(resumeId),
+    enabled: Boolean(resumeId),
+  });
+  const analysisMutation = useMutation({
+    mutationFn: () => analyzeResume(resumeId, jobDescription.trim()),
+    onSuccess: (analysis) => {
+      queryClient.setQueryData(["analysis", resumeId], analysis);
+      queryClient.invalidateQueries({ queryKey: ["analysis-summaries"] });
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      router.push(`/dashboard/analysis/${resumeId}`);
+    },
+  });
 
-  const handleJobMatch = async () => {
-    if (!jobDescription.trim()) return;
-    setIsAnalyzingJob(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setJobMatchResult({
-      matchScore: 74,
-      matchingSkills: ["JavaScript", "React", "Node.js", "AWS", "PostgreSQL"],
-      missingSkills: ["Kubernetes", "Terraform", "Go", "Machine Learning"],
-      recommendations: [
-        "Highlight your experience with cloud technologies more prominently",
-        "Add any experience with container orchestration",
-        "Consider adding relevant certifications for the missing technologies"
-      ]
-    });
-    setIsAnalyzingJob(false);
-  };
+  if (isResumePending) {
+    return <div className="flex min-h-64 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-accent" /></div>;
+  }
+
+  if (resumeError || !resume) {
+    const message = resumeError instanceof ApiError ? resumeError.message : "This resume could not be found.";
+    return (
+      <Card className="mx-auto max-w-xl">
+        <CardContent className="flex flex-col items-center p-12 text-center">
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
+            <FileText className="h-8 w-8 text-destructive" />
+          </div>
+          <p className="text-sm font-semibold uppercase tracking-wider text-destructive">404</p>
+          <h1 className="mt-2 text-2xl font-bold">Resume not found</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+          <Button className="mt-6" onClick={() => router.push("/dashboard/resumes")}>Back to resumes</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isAnalysisPending) {
+    return <div className="flex min-h-64 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-accent" /></div>;
+  }
+
+  const analysisNotFound = !analysisData && (!analysisError || (analysisError instanceof ApiError && analysisError.status === 404));
+  if (analysisNotFound) {
+    return (
+      <Card className="mx-auto max-w-2xl">
+        <CardContent className="p-8 sm:p-12">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10">
+            <Sparkles className="h-8 w-8 text-accent" />
+          </div>
+          <div className="mt-5 text-center">
+            <h1 className="text-2xl font-bold">No analysis yet</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your resume is ready. Add a job description to get a tailored, real-time analysis.
+            </p>
+          </div>
+          <div className="mt-8 space-y-2">
+            <label htmlFor="job-description" className="text-sm font-medium">Job description</label>
+            <Textarea
+              id="job-description"
+              value={jobDescription}
+              onChange={(event) => setJobDescription(event.target.value)}
+              placeholder="Paste the job description you want to match against..."
+              className="min-h-36 resize-y"
+            />
+          </div>
+          {analysisMutation.isError && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTitle>Analysis failed</AlertTitle>
+              <AlertDescription>{analysisMutation.error.message}</AlertDescription>
+            </Alert>
+          )}
+          <Button
+            className="mt-6 w-full sm:w-auto"
+            onClick={() => analysisMutation.mutate()}
+            disabled={!jobDescription.trim() || analysisMutation.isPending}
+          >
+            {analysisMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+            {analysisMutation.isPending ? "Starting analysis..." : "Start Analysis"}
+            {!analysisMutation.isPending && <ArrowRight className="ml-2 h-4 w-4" />}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (analysisError || !analysisData) {
+    return <Alert variant="destructive"><AlertTitle>Unable to load analysis</AlertTitle><AlertDescription>{analysisError?.message ?? "The requested analysis could not be found."}</AlertDescription></Alert>;
+  }
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-success";
@@ -157,7 +142,7 @@ export default function AnalysisPage() {
         <div>
           <h1 className="text-2xl font-bold">Resume Analysis</h1>
           <p className="text-muted-foreground">
-            Software_Engineer_Resume.pdf
+            {resume.fullName} resume analysis
           </p>
         </div>
         <Button variant="outline">
@@ -180,17 +165,17 @@ export default function AnalysisPage() {
               {/* Contact Info */}
               <div>
                 <h3 className="font-semibold text-lg">
-                  {user ? `${user.firstName} ${user.lastName}` : "Loading..."}
+                  {resume.fullName}
                 </h3>
-                <p className="text-sm text-muted-foreground">{user?.email ?? ""}</p>
-                <p className="text-sm text-muted-foreground">{resumeData.phone}</p>
-                <p className="text-sm text-muted-foreground">{resumeData.location}</p>
+                <p className="text-sm text-muted-foreground">{resume.email}</p>
+                <p className="text-sm text-muted-foreground">{resume.phone}</p>
+                <p className="text-sm text-muted-foreground">{resume.location}</p>
               </div>
 
               {/* Summary */}
               <div>
                 <h4 className="font-medium text-sm text-muted-foreground mb-2">SUMMARY</h4>
-                <p className="text-sm">{resumeData.summary}</p>
+                <p className="text-sm">{resume.summary}</p>
               </div>
 
               {/* Skills */}
@@ -200,7 +185,7 @@ export default function AnalysisPage() {
                   SKILLS
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {resumeData.skills.map((skill, index) => (
+                  {resume.skills.map((skill, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {skill}
                     </Badge>
@@ -215,7 +200,7 @@ export default function AnalysisPage() {
                   EXPERIENCE
                 </h4>
                 <div className="space-y-4">
-                  {resumeData.experience.map((exp, index) => (
+                  {resume.experience.map((exp, index) => (
                     <div key={index}>
                       <p className="font-medium text-sm">{exp.title}</p>
                       <p className="text-xs text-muted-foreground">{exp.company} | {exp.period}</p>
@@ -232,13 +217,14 @@ export default function AnalysisPage() {
                 </div>
               </div>
 
+
               {/* Education */}
               <div>
                 <h4 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-2">
                   <GraduationCap className="w-4 h-4" />
                   EDUCATION
                 </h4>
-                {resumeData.education.map((edu, index) => (
+                {resume.education.map((edu, index) => (
                   <div key={index}>
                     <p className="font-medium text-sm">{edu.degree}</p>
                     <p className="text-xs text-muted-foreground">{edu.school}, {edu.year}</p>
@@ -297,7 +283,7 @@ export default function AnalysisPage() {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {analysisData.strengths.map((strength, index) => (
+                    {analysisData?.strengths?.map((strength, index) => (
                       <li key={index} className="flex items-start gap-2 text-sm">
                         <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
                         {strength}
@@ -317,7 +303,7 @@ export default function AnalysisPage() {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
-                    {analysisData.weaknesses.map((weakness, index) => (
+                    {analysisData?.weaknesses?.map((weakness, index) => (
                       <li key={index} className="flex items-start gap-2 text-sm">
                         <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
                         {weakness}
@@ -337,7 +323,7 @@ export default function AnalysisPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {analysisData.recommendations.map((rec, index) => (
+                    {analysisData?.recommendations?.map((rec, index) => (
                       <div key={index} className="p-4 rounded-xl bg-secondary/50">
                         <div className="flex items-start justify-between gap-4">
                           <div>
@@ -362,12 +348,12 @@ export default function AnalysisPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2 text-success">
                       <CheckCircle2 className="w-5 h-5" />
-                      Found Keywords ({analysisData.foundKeywords.length})
+                      Valuable Skills ({analysisData?.valuableSkills?.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {analysisData.foundKeywords.map((keyword, index) => (
+                      {analysisData?.valuableSkills?.map((keyword, index) => (
                         <Badge key={index} variant="outline" className="bg-success/10 text-success border-success/20">
                           {keyword}
                         </Badge>
@@ -381,12 +367,12 @@ export default function AnalysisPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2 text-destructive">
                       <AlertCircle className="w-5 h-5" />
-                      Missing Keywords ({analysisData.missingKeywords.length})
+                      Needed Skills ({analysisData?.neededSkills?.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {analysisData.missingKeywords.map((keyword, index) => (
+                      {analysisData?.neededSkills?.map((keyword, index) => (
                         <Badge key={index} variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
                           {keyword}
                         </Badge>
@@ -405,36 +391,37 @@ export default function AnalysisPage() {
                   <div>
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span>Technical Skills</span>
-                      <span className="font-medium">85%</span>
+                      <span className="font-medium">{analysisData.keywordScore}%</span>
                     </div>
-                    <Progress value={85} className="h-2" />
+                    <Progress value={analysisData.keywordScore} className="h-2" />
                   </div>
                   <div>
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span>Industry Keywords</span>
-                      <span className="font-medium">72%</span>
+                      <span className="font-medium">{analysisData.atsScore}%</span>
                     </div>
-                    <Progress value={72} className="h-2" />
+                    <Progress value={analysisData.atsScore} className="h-2" />
                   </div>
                   <div>
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span>Action Verbs</span>
-                      <span className="font-medium">90%</span>
+                      <span className="font-medium">{analysisData.overallScore}%</span>
                     </div>
-                    <Progress value={90} className="h-2" />
+                    <Progress value={analysisData.overallScore} className="h-2" />
                   </div>
                   <div>
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span>Soft Skills</span>
-                      <span className="font-medium">65%</span>
+                      <span className="font-medium">{analysisData?.valuableSkills?.length}</span>
                     </div>
-                    <Progress value={65} className="h-2" />
+                    <Progress value={Math.min(100, analysisData?.valuableSkills?.length * 10)} className="h-2" />
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="job-match" className="space-y-4">
+            
+          <TabsContent value="job-match" className="space-y-4">
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
@@ -470,78 +457,6 @@ export default function AnalysisPage() {
                   </Button>
                 </CardContent>
               </Card>
-
-              {jobMatchResult && (
-                <>
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-2">Match Score</p>
-                        <p className={`text-5xl font-bold ${getScoreColor(jobMatchResult.matchScore)}`}>
-                          {jobMatchResult.matchScore}%
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2 text-success">
-                          <CheckCircle2 className="w-5 h-5" />
-                          Matching Skills
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                          {jobMatchResult.matchingSkills.map((skill, index) => (
-                            <Badge key={index} variant="outline" className="bg-success/10 text-success border-success/20">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base flex items-center gap-2 text-destructive">
-                          <AlertCircle className="w-5 h-5" />
-                          Missing Skills
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-wrap gap-2">
-                          {jobMatchResult.missingSkills.map((skill, index) => (
-                            <Badge key={index} variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-accent" />
-                        Recommendations for This Job
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        {jobMatchResult.recommendations.map((rec, index) => (
-                          <li key={index} className="flex items-start gap-2 text-sm">
-                            <Sparkles className="w-4 h-4 text-accent mt-0.5 shrink-0" />
-                            {rec}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
             </TabsContent>
           </Tabs>
         </div>

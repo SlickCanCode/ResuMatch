@@ -50,3 +50,19 @@ export interface AnalysisData {
     impact: "high" | "medium" | "low";
   }[];
 }
+
+export interface ResumePreview {
+  id: string;
+  name: string;
+  uploadDate: string;
+  latestScore: number | null;
+  analysisCount: number;
+}
+
+export interface AnalysisSummary{
+  id: string;
+  resumeName: string;
+  dateTime: string;
+  score: number;
+  atsScore: number;
+}

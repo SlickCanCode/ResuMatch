@@ -18,60 +18,6 @@ import { useRecentAnalyses } from "@/hooks/Dashboard/useRecentAnalyses";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-// const recentAnalyses = [
-//   {
-//     id: 1,
-//     name: "Software_Engineer_Resume.pdf",
-//     score: 87,
-//     atsScore: 92,
-//     date: "2 hours ago",
-//   },
-//   {
-//     id: 2,
-//     name: "Product_Manager_CV.pdf",
-//     score: 72,
-//     atsScore: 78,
-//     date: "Yesterday",
-//   },
-//   {
-//     id: 3,
-//     name: "Data_Analyst_Resume.pdf",
-//     score: 95,
-//     atsScore: 98,
-//     date: "3 days ago",
-//   },
-// ];
-
-// const stats = [
-//   { 
-//     label: "Resumes Analyzed", 
-//     value: "12", 
-//     change: "+3 this week",
-//     icon: FileText,
-//     color: "text-accent"
-//   },
-//   { 
-//     label: "Avg. Resume Score", 
-//     value: "84%", 
-//     change: "+5% improvement",
-//     icon: TrendingUp,
-//     color: "text-success"
-//   },
-//   { 
-//     label: "Avg. ATS Score", 
-//     value: "89%", 
-//     change: "+8% from last month",
-//     icon: Target,
-//     color: "text-chart-2"
-//   },
-//   { 
-//     label: "Analyses This Month", 
-//     value: "8", 
-//     change: "4 remaining",
-//     icon: BarChart3,
-//     color: "text-warning"
-//   },
-// ];
 
 export default function DashboardPage() {
   const {stats, error: statsError, refetch: refetchStats} = useStats();
@@ -169,7 +115,7 @@ export default function DashboardPage() {
               recentAnalyses.map((analysis) => (
                 <Link 
                   key={analysis.id} 
-                  href={`/dashboard/analysis/${analysis.id}`}
+                  href={`/dashboard/analysis/${analysis.resumeId}`}
                   className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
                 >
                   <div className="flex items-center gap-4">

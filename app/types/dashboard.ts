@@ -13,6 +13,7 @@ export interface StatsResponse {
 
 export interface AnalysisPreviewResponse {
   id: string;
+  resumeId: string;
   fileName: string;
   resumeScore: number;
   atsScore: number;
@@ -22,6 +23,7 @@ export interface AnalysisPreviewResponse {
 // ---- View models the UI actually renders ----
 export interface AnalysisPreview {
   id: string;
+  resumeId: string;
   name: string;
   score: number;
   atsScore: number;
