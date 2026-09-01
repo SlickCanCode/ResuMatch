@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Upload, Sparkles, Check } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export function Hero() {
+  const { data: user } = useCurrentUser();
+
   return (
     <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -23,8 +26,8 @@ export function Hero() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" className="text-base" asChild>
-                <Link href="/register">
-                  Start Free Analysis
+                <Link href={user ? "/dashboard" : "/register"}>
+                  {user ? "Go to Dashboard" : "Start Free Analysis"}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>

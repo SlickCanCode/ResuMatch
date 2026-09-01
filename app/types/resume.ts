@@ -36,8 +36,8 @@ export interface AnalysisData {
   strengths: string[];
   weaknesses: string[];
 
-  neededSkills: string[];
-  valuableSkills: string[];
+  existingSkills: string[];
+  skillsToDevelop: string[];
 
   grammarIssues: {
     text: string;
@@ -65,4 +65,11 @@ export interface AnalysisSummary{
   dateTime: string;
   score: number;
   atsScore: number;
+}
+
+export interface JobMatchResponse{
+  matchScore: number;
+  foundSkills: string[];
+  missingSkills: string[];
+  aiSuggestions: string[];
 }

@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Menu, X } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: user } = useCurrentUser();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -32,12 +34,20 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Get Started</Link>
-            </Button>
+            {user ? (
+              <Button asChild>
+                <Link href="/dashboard">Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Sign in</Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/register">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           <button
@@ -74,12 +84,20 @@ export function Navbar() {
               Pricing
             </Link>
             <div className="pt-3 flex flex-col gap-2">
-              <Button variant="ghost" asChild className="w-full">
-                <Link href="/login">Sign in</Link>
-              </Button>
-              <Button asChild className="w-full">
-                <Link href="/register">Get Started</Link>
-              </Button>
+              {user ? (
+                <Button asChild className="w-full">
+                  <Link href="/dashboard">Go to Dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild className="w-full">
+                    <Link href="/login">Sign in</Link>
+                  </Button>
+                  <Button asChild className="w-full">
+                    <Link href="/register">Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

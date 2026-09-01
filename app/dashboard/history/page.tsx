@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAnalysisSummaries } from "@/hooks/useAnalysisSummaries";
+import { deleteResumeAnalysis } from "@/lib/resumeApi";
+import { DeleteConfirmationDialog } from "@/components/dashboard/delete-confirmation-dialog";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,11 +28,26 @@ import {
   Calendar,
   Upload,
   Loader2,
+  Grid3X3,
+  List,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [analysisToDelete, setAnalysisToDelete] = useState<{ id: string; name: string } | null>(null);
+  const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { data: analysisHistory = [], isPending, isError, error, refetch } = useAnalysisSummaries();
+  const deleteMutation = useMutation({
+    mutationFn: deleteResumeAnalysis,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["analysis-summaries"] });
+      await queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      setAnalysisToDelete(null);
+    },
+  });
 
   const filteredHistory = analysisHistory.filter((item) =>
     item.resumeName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -45,6 +63,11 @@ export default function HistoryPage() {
     if (score >= 90) return "bg-success/10 text-success";
     if (score >= 70) return "bg-warning/10 text-warning-foreground";
     return "bg-destructive/10 text-destructive";
+  };
+
+  const requestDelete = (resumeId: string, name: string) => {
+    deleteMutation.reset();
+    setAnalysisToDelete({ id: resumeId, name });
   };
 
   return (
@@ -67,8 +90,8 @@ export default function HistoryPage() {
       {/* Search and Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="relative flex-1 w-full sm:max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search by file name..."
@@ -76,6 +99,18 @@ export default function HistoryPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+            </div>
+            <div className="flex items-center gap-1 rounded-lg bg-secondary p-1">
+                            <Button
+                variant={viewMode === "grid" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("grid")}
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </Button>
+              <Button variant={viewMode === "list" ? "default" : "ghost"} size="sm" aria-label="List view" className="hidden md:inline-flex" onClick={() => setViewMode("list")}>
+                <List className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -95,6 +130,38 @@ export default function HistoryPage() {
           </Button>
         </Alert>
       ) : filteredHistory.length > 0 ? (
+        isMobile || viewMode === "grid" ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredHistory.map((item) => (
+              <Card key={item.id} className="transition-shadow hover:shadow-lg">
+                <CardContent className="p-6">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${getScoreBadgeColor(item.score)}`}>
+                      <FileText className={`h-6 w-6 ${getScoreColor(item.score)}`} />
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild><Link href={`/dashboard/analysis/${item.resumeId}`}><Eye className="mr-2 h-4 w-4" />View Analysis</Link></DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onSelect={() => requestDelete(item.resumeId, item.resumeName)}>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <h3 className="mb-1 truncate text-sm font-medium">{item.resumeName}</h3>
+                  <p className="mb-4 text-xs text-muted-foreground">{formatRelativeTime(item.dateTime)}</p>
+                  <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
+                    <div><p className="text-xs text-muted-foreground">Score</p><p className={`text-xl font-bold ${getScoreColor(item.score)}`}>{item.score}%</p></div>
+                    <div><p className="text-xs text-muted-foreground">ATS</p><p className={`text-xl font-bold ${getScoreColor(item.atsScore)}`}>{item.atsScore}%</p></div>
+                  </div>
+                  <Button variant="outline" size="sm" className="mt-4 w-full" asChild><Link href={`/dashboard/analysis/${item.resumeId}`}><Eye className="mr-1 h-4 w-4" />View Analysis</Link></Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
@@ -157,7 +224,7 @@ export default function HistoryPage() {
                             <Download className="w-4 h-4 mr-2" />
                             Download Report
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem className="text-destructive" onSelect={() => requestDelete(item.resumeId, item.resumeName)}>
                             <Trash2 className="w-4 h-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -170,6 +237,7 @@ export default function HistoryPage() {
             </div>
           </CardContent>
         </Card>
+        )
       ) : (
         <Card>
           <CardContent className="p-12">
@@ -192,6 +260,19 @@ export default function HistoryPage() {
           </CardContent>
         </Card>
       )}
+      <DeleteConfirmationDialog
+        itemName={analysisToDelete?.name ?? "this analysis"}
+        itemType="analysis"
+        open={analysisToDelete !== null}
+        isPending={deleteMutation.isPending}
+        error={deleteMutation.error?.message}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setAnalysisToDelete(null);
+        }}
+        onConfirm={() => {
+          if (analysisToDelete) deleteMutation.mutate(analysisToDelete.id);
+        }}
+      />
     </div>
   );
 }

@@ -10,7 +10,6 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: 'ResuMatch - Optimize Your Resume with AI',
   description: 'AI-powered resume analyzer that helps you optimize your resume for ATS systems and land your dream job.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {

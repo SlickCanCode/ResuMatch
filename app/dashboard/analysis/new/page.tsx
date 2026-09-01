@@ -18,6 +18,9 @@ export default function NewAnalysisPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isWaitingToUpload, setIsWaitingToUpload] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
+  const [uploadStage, setUploadStage] = useState("Uploading and reading your resume");
+  const [analysisStage, setAnalysisStage] = useState("Analyzing...");
+  const [isPreviewVisible, setIsPreviewVisible] = useState(true);
   const uploadMutation = useMutation({ mutationFn: uploadResume });
   const analysisMutation = useMutation({
     mutationFn: ({ resumeId, description }: { resumeId: string; description: string }) =>
@@ -32,10 +35,33 @@ export default function NewAnalysisPage() {
     const timer = window.setTimeout(() => {
       setIsWaitingToUpload(false);
       uploadMutation.mutate(file);
-    }, 5000);
+    }, 3000);
 
     return () => window.clearTimeout(timer);
   }, [file, resume, uploadMutation.isPending]);
+
+  useEffect(() => {
+    if (!uploadMutation.isPending) {
+      setUploadStage("Uploading and reading your resume");
+      return;
+    }
+    const validatingTimer = window.setTimeout(() => setUploadStage("Validating file"), 1000);
+    const parsingTimer = window.setTimeout(() => setUploadStage("Parsing resume"), 2000);
+    return () => {
+      window.clearTimeout(validatingTimer);
+      window.clearTimeout(parsingTimer);
+    };
+  }, [uploadMutation.isPending]);
+
+  useEffect(() => {
+    if (!analysisMutation.isPending) {
+      setAnalysisStage("Analyzing...");
+      return;
+    }
+    const stages = [[1000, "Matching job description with resume"], [2000, "Getting related skills"], [3000, "Analyzing strengths and weaknesses"], [4000, "AI recommending actions"]] as const;
+    const timers = stages.map(([delay, message]) => window.setTimeout(() => setAnalysisStage(message), delay));
+    return () => timers.forEach(window.clearTimeout);
+  }, [analysisMutation.isPending]);
 
   useEffect(() => {
     if (resume) {
@@ -123,8 +149,8 @@ export default function NewAnalysisPage() {
                 ${isDragging ? "border-accent bg-accent/5" : "border-border hover:border-muted-foreground/50"}
               `}
             >
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
+              <div className="flex flex-col min-w-0 items-center">
+                <div className="w-16 h-16 rounded-2xl min-w-0 bg-secondary flex items-center justify-center mb-4">
                   <Upload className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h3 className="font-semibold mb-2">Drop your resume here</h3>
@@ -149,9 +175,9 @@ export default function NewAnalysisPage() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between p-4 rounded-xl bg-secondary/50">
+            <div className="flex min-w-0 items-center justify-between p-4 rounded-xl bg-secondary/50">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center">
+                <div className="w-12 h-12 min-w-0 rounded-xl bg-background flex items-center justify-center">
                   <FileText className="w-6 h-6 text-accent" />
                 </div>
                 <div>
@@ -177,7 +203,7 @@ export default function NewAnalysisPage() {
             </div>
           )}
           {isWaitingToUpload && (
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm">
+            <div className="mt-4 flex items-center min-w-0 gap-3 rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm">
               <Clock3 className="h-5 w-5 shrink-0 text-accent" />
               <div>
                 <p className="font-medium">Reviewing your file</p>
@@ -187,23 +213,26 @@ export default function NewAnalysisPage() {
             </div>
           )}
           {uploadMutation.isPending && (
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-sm">
+            <div className="mt-4 flex min-w-0 items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-sm">
               <Loader2 className="h-5 w-5 shrink-0 animate-spin text-accent" />
               <div>
-                <p className="font-medium">Uploading and reading your resume</p>
+                <p className="font-medium">{uploadStage}</p>
                 <p className="text-muted-foreground">Your file is locked while we process it.</p>
               </div>
             </div>
           )}
-          {resume && (
+           {resume && (
              <Card className="mt-2.5">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+            <CardHeader className="flex min-w-0 flex-row items-center justify-between gap-4">
+              <CardTitle className="text-lg flex min-w-0 items-center gap-2">
                 <FileText className="w-5 h-5" />
                 Resume Preview
               </CardTitle>
+              <Button type="button" variant="outline" size="sm" aria-expanded={isPreviewVisible} onClick={() => setIsPreviewVisible((visible) => !visible)} className={isPreviewVisible ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}>
+                {isPreviewVisible ? "Hide" : "Show"}
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-6">
+            {isPreviewVisible && <CardContent className="space-y-6 min-w-0">
               {/* Contact Info */}
               <div>
                 <h3 className="font-semibold text-lg">
@@ -272,7 +301,7 @@ export default function NewAnalysisPage() {
                   </div>
                 ))}
               </div>
-            </CardContent>
+            </CardContent>}
           </Card>
           )}
           {resume && (
@@ -306,7 +335,7 @@ export default function NewAnalysisPage() {
           {analysisMutation.isPending ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Analyzing...
+              {analysisStage}
             </>
           ) : (
             <>

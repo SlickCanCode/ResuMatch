@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useResumes } from "@/hooks/useResumes";
+import { deleteResume } from "@/lib/resumeApi";
+import { DeleteConfirmationDialog } from "@/components/dashboard/delete-confirmation-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,8 +35,18 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export default function ResumesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [resumeToDelete, setResumeToDelete] = useState<{ id: string; name: string } | null>(null);
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { data: resumes = [], isPending, isError, error, refetch } = useResumes();
+  const deleteMutation = useMutation({
+    mutationFn: deleteResume,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["resumes"] });
+      await queryClient.invalidateQueries({ queryKey: ["analysis-summaries"] });
+      setResumeToDelete(null);
+    },
+  });
 
   const filteredResumes = resumes.filter((resume) =>
     resume.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -54,6 +67,11 @@ export default function ResumesPage() {
   };
 
   const scoreLabel = (score: number | null) => score === null ? "Not analyzed" : `${score}%`;
+
+  const requestDelete = (id: string, name: string) => {
+    deleteMutation.reset();
+    setResumeToDelete({ id, name });
+  };
 
   return (
     <div className="space-y-6">
@@ -144,14 +162,10 @@ export default function ResumesPage() {
                             View Analysis
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
+                         <DropdownMenuItem className="text-destructive" onSelect={() => requestDelete(resume.id, resume.name)}>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -244,7 +258,7 @@ export default function ResumesPage() {
                               <Download className="w-4 h-4 mr-2" />
                               Download
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem className="text-destructive" onSelect={() => requestDelete(resume.id, resume.name)}>
                               <Trash2 className="w-4 h-4 mr-2" />
                               Delete
                             </DropdownMenuItem>
@@ -282,6 +296,19 @@ export default function ResumesPage() {
       )}
       </>
       )}
+      <DeleteConfirmationDialog
+        itemName={resumeToDelete?.name ?? "this resume"}
+        itemType="resume"
+        open={resumeToDelete !== null}
+        isPending={deleteMutation.isPending}
+        error={deleteMutation.error?.message}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) setResumeToDelete(null);
+        }}
+        onConfirm={() => {
+          if (resumeToDelete) deleteMutation.mutate(resumeToDelete.id);
+        }}
+      />
     </div>
   );
 }

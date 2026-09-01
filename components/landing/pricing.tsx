@@ -9,46 +9,45 @@ const plans = [
     period: "forever",
     description: "Perfect for trying out ResumeAI",
     features: [
-      "3 resume analyses per month",
-      "Basic ATS compatibility check",
-      "Keyword suggestions",
-      "Email support"
+      "5 resume analyses per month",
+      "Advanced ATS compatibility check",
+      "Skill upgrade suggestions",
     ],
     cta: "Get Started",
     popular: false
   },
-  {
-    name: "Pro",
-    price: "$12",
-    period: "per month",
-    description: "Best for active job seekers",
-    features: [
-      "Unlimited resume analyses",
-      "Advanced ATS optimization",
-      "Job description matching",
-      "Grammar & style suggestions",
-      "Priority support",
-      "Export detailed reports"
-    ],
-    cta: "Start Free Trial",
-    popular: true
-  },
-  {
-    name: "Team",
-    price: "$49",
-    period: "per month",
-    description: "For career coaches & recruiters",
-    features: [
-      "Everything in Pro",
-      "Up to 10 team members",
-      "Bulk resume analysis",
-      "Custom branding",
-      "API access",
-      "Dedicated account manager"
-    ],
-    cta: "Contact Sales",
-    popular: false
-  }
+  // {
+  //   name: "Pro",
+  //   price: "$12",
+  //   period: "per month",
+  //   description: "Best for active job seekers",
+  //   features: [
+  //     "Unlimited resume analyses",
+  //     "Advanced ATS optimization",
+  //     "Job description matching",
+  //     "Grammar & style suggestions",
+  //     "Priority support",
+  //     "Export detailed reports"
+  //   ],
+  //   cta: "Start Free Trial",
+  //   popular: true
+  // },
+  // {
+  //   name: "Team",
+  //   price: "$49",
+  //   period: "per month",
+  //   description: "For career coaches & recruiters",
+  //   features: [
+  //     "Everything in Pro",
+  //     "Up to 10 team members",
+  //     "Bulk resume analysis",
+  //     "Custom branding",
+  //     "API access",
+  //     "Dedicated account manager"
+  //   ],
+  //   cta: "Contact Sales",
+  //   popular: false
+  // }
 ];
 
 export function Pricing() {
@@ -57,14 +56,14 @@ export function Pricing() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-balance">
-            Simple, transparent pricing
+            Try it for free!
           </h2>
           <p className="text-muted-foreground text-lg">
-            Choose the plan that fits your job search needs. Cancel anytime.
+            Try the beta version now without charges 
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="flex justify-center gap-6 max-w-5xl mx-auto">
           {plans.map((plan, index) => (
             <div 
               key={index}

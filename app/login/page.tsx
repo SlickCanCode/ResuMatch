@@ -164,11 +164,11 @@ export default function LoginPage() {
         <div className="max-w-md text-primary-foreground">
           <blockquote className="space-y-6">
             <p className="text-2xl font-medium leading-relaxed">
-              &quot;ResumeAI helped me land interviews at 3 FAANG companies. The AI insights were incredibly accurate and actionable.&quot;
+              &quot;Now i can know if i'm the problem or it's just my resume.&quot;
             </p>
             <footer>
-              <p className="font-semibold">Alex Thompson</p>
-              <p className="text-primary-foreground/70">Senior Engineer at Amazon</p>
+              <p className="font-semibold">Emmanuel Damilare</p>
+              <p className="text-primary-foreground/70">Senior Engineer</p>
             </footer>
           </blockquote>
         </div>

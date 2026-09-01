@@ -22,7 +22,7 @@ export default function ForgotPassworPage() {
 
     try {
       await sendOtp(email);
-          window.location.href = `/verify-email?email=${encodeURIComponent(email)}&purpose=reset-password`;
+          window.location.href = `/verify-email?email=${encodeURIComponent(email)}&purpose=reset-password&step=otp`;
     } catch (error) {
       setError(error instanceof ApiError ? error.message : "Failed to send verification code.");
     } finally {

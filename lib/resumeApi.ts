@@ -1,4 +1,4 @@
-import { AnalysisData, AnalysisSummary, ResumeData, ResumePreview } from "@/app/types/resume";
+import { AnalysisData, AnalysisSummary, JobMatchResponse, ResumeData, ResumePreview } from "@/app/types/resume";
 import { formatRelativeTime } from "@/app/utils/formatRelativeTime";
 import { apiFetch } from "@/lib/api-client";
 
@@ -11,6 +11,18 @@ export function uploadResume(file: File) {
 
 export function analyzeResume(id: string, jobDescription: string) {
     return apiFetch<AnalysisData>(`/api/v1/resumes/${id}/analyze`, {method:"POST", body: JSON.stringify({"jobDescription": jobDescription})})
+}
+
+export function deleteResume(id: string) {
+    return apiFetch<void>(`/api/v1/resumes/${id}`, {method: "DELETE"})
+}
+
+export function deleteResumeAnalysis(id: string) {
+    return apiFetch<void>(`/api/v1/resumes/${id}/analyze`, {method: "DELETE"})
+}
+
+export function analyzeJobMatch(id: string, jobLink: string) {
+    return apiFetch<JobMatchResponse>(`/api/v1/resumes/${id}/analyze/job-match`, {method: "POST", body: JSON.stringify({"jobLink": jobLink})})
 }
 
 export function getAnalysis(id: string) {
@@ -50,6 +62,7 @@ export function getAllResume() {
 export function getAllAnalysis() {
     type AnalysisSummaryResponse = Partial<AnalysisSummary> & {
         analysisId?: string;
+        resumeId?: string;
         resume?: { resumeId?: string; id?: string; name?: string; fileName?: string };
         fileName?: string;
         date?: string;
@@ -60,7 +73,7 @@ export function getAllAnalysis() {
 
         return items.map((item) => ({
             id: item.id ?? item.analysisId ?? "",
-            resumeId: item.id ?? item.resume?.resumeId ?? item.resume?.id ?? "",
+            resumeId: item.resumeId ?? item.resume?.resumeId ?? item.resume?.id ?? "",
             resumeName: item.resumeName ?? item.resume?.name ?? item.resume?.fileName ?? item.fileName ?? "Untitled resume",
             dateTime: item.dateTime ?? item.date ?? "",
             score: item.score ?? 0,

@@ -1,4 +1,5 @@
 import { API_BASE_URL, apiFetch } from "@/lib/api-client";
+import type { ChangePasswordRequest, SubscriptionInfo, UpdateUserRequest, User } from "@/app/types/user";
 
 export function getGoogleOAuthUrl() {
   return `${API_BASE_URL}/oauth2/authorization/google`;
@@ -63,4 +64,20 @@ export function resetPassword(newPassword: string, resetToken: string) {
     method: "PATCH",
     body: JSON.stringify({ newPassword, resetToken }),
   });
+}
+
+export function updateUser(data: UpdateUserRequest) {
+  return apiFetch<User>("/api/v1/users/me", { method: "PUT", body: JSON.stringify(data) });
+}
+
+export function getSubscriptionInfo() {
+  return apiFetch<SubscriptionInfo>("/api/v1/users/me/subscription");
+}
+
+export function changePassword(data: ChangePasswordRequest) {
+  return apiFetch<void>("/api/v1/users/me/change-password", { method: "PATCH", body: JSON.stringify(data) });
+}
+
+export function logOutUser() {
+  return apiFetch<void>("/api/v1/auth/logout", {method: "POST"})
 }
