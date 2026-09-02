@@ -80,7 +80,11 @@ export async function apiFetch<T>(
     const body = await res.text().catch(() => "");
 
     let message = body || `Request failed (${res.status})`;
-
+        console.error(
+    `API Error ${res.status}:`,
+    message
+  );
+  
     if (body) {
       try {
         const parsed = JSON.parse(body) as {

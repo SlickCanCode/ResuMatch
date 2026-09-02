@@ -1,32 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import {Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Check, Eye, EyeOff, FileText, Loader2, Lock } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import {
+  ArrowLeft,
+  Check,
+  Eye,
+  EyeOff,
+  FileText,
+  Loader2,
+  Lock,
+} from "lucide-react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError } from "@/lib/api-client";
 import { resetPassword } from "@/lib/authApi";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const resetToken = searchParams.get("rt");
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const searchParams = useSearchParams();
-  const resetToken = searchParams.get("rt");
-  if (!resetToken) {
-    window.location.href = "/login";
-  }
 
+  useEffect(() => {
+    if (!resetToken) {
+      router.replace("/login");
+    }
+  }, [resetToken, router]);
 
   const passwordChecks = useMemo(
     () => ({
-      length: password.length >= 6,
+      length: password.length >= 8,
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /\d/.test(password),
@@ -41,29 +52,30 @@ export default function ResetPasswordPage() {
     passwordChecks.number;
 
   const passwordsMatch =
-    password.length > 0 &&
-    password === confirmPassword;
+    password.length > 0 && password === confirmPassword;
 
   const canSubmit = isPasswordValid && passwordsMatch;
 
-  const handleSubmit = async (
-    e: React.SubmitEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!canSubmit || !resetToken) return;
-    const newPassword = password;
+
     setIsLoading(true);
+    setError("");
 
     try {
-      await resetPassword(newPassword, resetToken);
-        window.location.href = "/login";
-      } catch (error) {
-        setError(error instanceof ApiError ? error.message : "Failed to reset password. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-
+      await resetPassword(password, resetToken);
+      router.replace("/login");
+    } catch (error) {
+      setError(
+        error instanceof ApiError
+          ? error.message
+          : "Failed to reset password. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const Requirement = ({
@@ -80,167 +92,118 @@ export default function ResetPasswordPage() {
     >
       <Check
         size={16}
-        className={
-          valid
-            ? "text-green-600"
-            : "text-slate-300"
-        }
+        className={valid ? "text-green-600" : "text-slate-300"}
       />
-
       {label}
     </div>
   );
 
+  if (!resetToken) {
+    return null;
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl sm:p-10">
-
         {/* Icon */}
-
         <div className="mb-8 flex justify-center">
-              <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center">
-                <FileText className="w-7 h-7 text-primary-foreground" />
-              </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
+            <FileText className="h-7 w-7 text-primary-foreground" />
+          </div>
         </div>
 
         {/* Heading */}
-
         <div className="space-y-3 text-center">
           <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
             Create new password
           </h1>
 
           <p className="text-sm leading-6 text-slate-500">
-            Your new password must be different from
-            any password you've used before.
+            Your new password must be different from any password you've used
+            before.
           </p>
         </div>
+
         {error && (
-           <Alert variant="destructive">
+          <div className="mt-6">
+            <Alert variant="destructive">
               <AlertTitle>Recovery Failed</AlertTitle>
-              <AlertDescription>
-                {error}
-              </AlertDescription>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
-          )}
+          </div>
+        )}
 
         {/* Form */}
-
-        <form
-          onSubmit={handleSubmit}
-          className="mt-8 space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           {/* Password */}
-
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">
               New Password
             </label>
 
             <div className="flex h-14 items-center rounded-xl border border-slate-200 px-4 transition focus-within:border-black focus-within:ring-4 focus-within:ring-black/10">
-              <Lock
-                size={20}
-                className="mr-3 text-slate-400"
-              />
+              <Lock size={20} className="mr-3 text-slate-400" />
 
               <input
-                type={
-                  showPassword
-                    ? "text"
-                    : "password"
-                }
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 className="w-full bg-transparent outline-none"
                 value={password}
-                onChange={(e) =>
-                  setPassword(e.target.value)
-                }
+                onChange={(e) => setPassword(e.target.value)}
               />
 
               <button
                 type="button"
-                onClick={() =>
-                  setShowPassword(
-                    !showPassword
-                  )
-                }
+                onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
-                  <EyeOff
-                    size={20}
-                    className="text-slate-400"
-                  />
+                  <EyeOff size={20} className="text-slate-400" />
                 ) : (
-                  <Eye
-                    size={20}
-                    className="text-slate-400"
-                  />
+                  <Eye size={20} className="text-slate-400" />
                 )}
               </button>
             </div>
           </div>
 
           {/* Confirm Password */}
-
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">
               Confirm Password
             </label>
 
             <div className="flex h-14 items-center rounded-xl border border-slate-200 px-4 transition focus-within:border-black focus-within:ring-4 focus-within:ring-black/10">
-              <Lock
-                size={20}
-                className="mr-3 text-slate-400"
-              />
+              <Lock size={20} className="mr-3 text-slate-400" />
 
               <input
-                type={
-                  showConfirmPassword
-                    ? "text"
-                    : "password"
-                }
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm your password"
                 className="w-full bg-transparent outline-none"
                 value={confirmPassword}
-                onChange={(e) =>
-                  setConfirmPassword(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
 
               <button
                 type="button"
                 onClick={() =>
-                  setShowConfirmPassword(
-                    !showConfirmPassword
-                  )
+                  setShowConfirmPassword(!showConfirmPassword)
                 }
               >
                 {showConfirmPassword ? (
-                  <EyeOff
-                    size={20}
-                    className="text-slate-400"
-                  />
+                  <EyeOff size={20} className="text-slate-400" />
                 ) : (
-                  <Eye
-                    size={20}
-                    className="text-slate-400"
-                  />
+                  <Eye size={20} className="text-slate-400" />
                 )}
               </button>
             </div>
 
-            {confirmPassword.length > 0 &&
-              !passwordsMatch && (
-                <p className="mt-2 text-sm text-red-500">
-                  Passwords do not match.
-                </p>
-              )}
+            {confirmPassword.length > 0 && !passwordsMatch && (
+              <p className="mt-2 text-sm text-red-500">
+                Passwords do not match.
+              </p>
+            )}
           </div>
 
           {/* Password Requirements */}
-
           <div className="rounded-xl bg-slate-50 p-4">
             <p className="mb-3 text-sm font-semibold text-slate-700">
               Password requirements
@@ -254,16 +217,12 @@ export default function ResetPasswordPage() {
 
               <Requirement
                 label="One uppercase letter"
-                valid={
-                  passwordChecks.uppercase
-                }
+                valid={passwordChecks.uppercase}
               />
 
               <Requirement
                 label="One lowercase letter"
-                valid={
-                  passwordChecks.lowercase
-                }
+                valid={passwordChecks.lowercase}
               />
 
               <Requirement
@@ -274,7 +233,6 @@ export default function ResetPasswordPage() {
           </div>
 
           {/* Submit */}
-
           <button
             type="submit"
             disabled={!canSubmit || isLoading}
@@ -282,10 +240,7 @@ export default function ResetPasswordPage() {
           >
             {isLoading ? (
               <>
-                <Loader2
-                  size={18}
-                  className="mr-2 animate-spin"
-                />
+                <Loader2 size={18} className="mr-2 animate-spin" />
                 Updating Password...
               </>
             ) : (
@@ -295,7 +250,6 @@ export default function ResetPasswordPage() {
         </form>
 
         {/* Back */}
-
         <Link
           href="/login"
           className="mx-auto mt-8 flex w-fit items-center gap-2 text-slate-500 transition hover:text-black"
@@ -305,5 +259,13 @@ export default function ResetPasswordPage() {
         </Link>
       </div>
     </main>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
