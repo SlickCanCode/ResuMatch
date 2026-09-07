@@ -176,11 +176,11 @@ export default function NewAnalysisPage() {
             </div>
           ) : (
             <div className="flex min-w-0 items-center justify-between p-4 rounded-xl bg-secondary/50">
-              <div className="flex items-center gap-4">
+              <div className="flex min-w-0 items-center gap-4">
                 <div className="w-12 h-12 min-w-0 rounded-xl bg-background flex items-center justify-center">
                   <FileText className="w-6 h-6 text-accent" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{file.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
@@ -234,7 +234,7 @@ export default function NewAnalysisPage() {
             </CardHeader>
             {isPreviewVisible && <CardContent className="space-y-6 min-w-0">
               {/* Contact Info */}
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-semibold text-lg">
                   {resume.fullName ? `${resume.fullName}` : "Loading..."}
                 </h3>

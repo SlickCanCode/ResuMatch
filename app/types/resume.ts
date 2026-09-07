@@ -61,10 +61,11 @@ export interface ResumePreview {
 
 export interface AnalysisSummary{
   id: string;
-  resumeName: string;
-  dateTime: string;
-  score: number;
+  resumeId: string;
+  fileName: string;
+  resumeScore: number;
   atsScore: number;
+  date: string;
 }
 
 export interface JobMatchResponse{

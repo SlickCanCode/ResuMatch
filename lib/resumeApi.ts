@@ -18,7 +18,7 @@ export function deleteResume(id: string) {
 }
 
 export function deleteResumeAnalysis(id: string) {
-    return apiFetch<void>(`/api/v1/resumes/${id}/analyze`, {method: "DELETE"})
+    return apiFetch<void>(`/api/v1/resumes/${id}/analyses`, {method: "DELETE"})
 }
 
 export function analyzeJobMatch(id: string, jobLink: string) {
@@ -60,23 +60,16 @@ export function getAllResume() {
 }
 
 export function getAllAnalysis() {
-    type AnalysisSummaryResponse = Partial<AnalysisSummary> & {
-        analysisId?: string;
-        resumeId?: string;
-        resume?: { resumeId?: string; id?: string; name?: string; fileName?: string };
-        fileName?: string;
-        date?: string;
-    };
 
-    return apiFetch<AnalysisSummaryResponse[] | { analyses?: AnalysisSummaryResponse[] }>("/api/v1/resumes/analyses").then((response) => {
+    return apiFetch<AnalysisSummary[] | { analyses?: AnalysisSummary[] }>("/api/v1/resumes/analyses").then((response) => {
         const items = Array.isArray(response) ? response : response.analyses ?? [];
 
         return items.map((item) => ({
-            id: item.id ?? item.analysisId ?? "",
-            resumeId: item.resumeId ?? item.resume?.resumeId ?? item.resume?.id ?? "",
-            resumeName: item.resumeName ?? item.resume?.name ?? item.resume?.fileName ?? item.fileName ?? "Untitled resume",
-            dateTime: item.dateTime ?? item.date ?? "",
-            score: item.score ?? 0,
+            id: item.id ??"",
+            resumeId: item.resumeId ?? "",
+            resumeName: item.fileName ?? "Untitled resume",
+            dateTime: item.date ?? item.date ?? "",
+            score: item.resumeScore ?? 0,
             atsScore: item.atsScore ?? 0,
         }));
     });

@@ -88,6 +88,7 @@ export default function AnalysisPage() {
   } = useQuery({
     queryKey: ["analysis", resumeId],
     queryFn: () => getAnalysis(resumeId),
+    retry: false,
     enabled: Boolean(resumeId),
   });
 
@@ -238,12 +239,6 @@ export default function AnalysisPage() {
             onClick={() => analysisMutation.mutate()}
             disabled={!jobDescription.trim() || analysisMutation.isPending}
           >
-            {analysisMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
-            )}
-
             {analysisMutation.isPending ?(
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -782,7 +777,6 @@ export default function AnalysisPage() {
                   <Textarea
                     placeholder="Paste the job link here..."
                     className="min-h-[150px] w-full min-w-0 max-w-full resize-y"
-                    value={jobDescription}
                     onChange={(e) =>
                       setJobDescription(e.target.value)
                     }
@@ -829,7 +823,9 @@ export default function AnalysisPage() {
                             Match score
                           </p>
 
-                          <p className="mt-1 text-3xl font-bold text-accent">
+                          <p className={`mt-1 text-3xl font-bold ${getScoreColor(
+                    analyzeJob.data.matchScore
+                  )}`}>
                             {analyzeJob.data.matchScore}%
                           </p>
                         </CardContent>

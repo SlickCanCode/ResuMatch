@@ -33,6 +33,9 @@ import {
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useState } from "react";
+import { logOutUser } from "@/lib/authApi";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -44,7 +47,26 @@ const navItems = [
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
+    const [collapsed, setCollapsed] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const queryClient = useQueryClient();
   
+    const logOut = async () => {
+      if (isLoggingOut) return;
+  
+      setIsLoggingOut(true);
+  
+      try {
+        await logOutUser();
+        queryClient.clear();
+        router.replace("/");
+      } catch (error) {
+        console.error("Failed to log out", error);
+        setIsLoggingOut(false);
+      }
+    };
+    
   const { data: user } = useCurrentUser();
   const initials = user
     ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
@@ -97,13 +119,19 @@ export function Header() {
             </nav>
             <div className="mt-auto border-t border-border p-3">
               <SheetClose asChild>
-                <Link
-                  href="/"
-                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-secondary/50 hover:text-foreground active:scale-[0.98] active:opacity-80"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>Sign out</span>
-                </Link>
+                        <Button
+            type="button"
+            variant="ghost"
+            disabled={isLoggingOut}
+            onClick={logOut}
+            className={cn(
+              "h-auto w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors",
+              collapsed && "justify-center px-2"
+            )}
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
+            {!collapsed && <span>{isLoggingOut ? "Signing out..." : "Sign out"}</span>}
+          </Button>
               </SheetClose>
             </div>
           </SheetContent>
@@ -141,7 +169,19 @@ export function Header() {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/">Sign out</Link>
+                                      <Button
+            type="button"
+            variant="ghost"
+            disabled={isLoggingOut}
+            onClick={logOut}
+            className={cn(
+              "h-auto w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors",
+              collapsed && "justify-center px-2"
+            )}
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
+            {!collapsed && <span>{isLoggingOut ? "Signing out..." : "Sign out"}</span>}
+          </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

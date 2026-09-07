@@ -51,6 +51,7 @@ export default function HistoryPage() {
 
   const filteredHistory = analysisHistory.filter((item) =>
     item.resumeName.toLowerCase().includes(searchQuery.toLowerCase())
+    
   );
 
   const getScoreColor = (score: number) => {
