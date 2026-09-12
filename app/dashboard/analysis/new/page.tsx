@@ -130,7 +130,7 @@ export default function NewAnalysisPage() {
         <CardHeader>
           <CardTitle className="text-lg">Resume File</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
           {uploadMutation.isError && (
                    <Alert variant="destructive" className="mb-2.5">
                       <AlertTitle>Api Error</AlertTitle>
