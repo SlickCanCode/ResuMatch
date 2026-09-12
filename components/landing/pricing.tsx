@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { scaleIn, stagger } from "@/lib/motion";
 
 const plans = [
   {
@@ -9,7 +13,7 @@ const plans = [
     period: "forever",
     description: "Perfect for trying out ResumeAI",
     features: [
-      "5 resume analyses per month",
+      "15 resume analyses per month",
       "Advanced ATS compatibility check",
       "Skill upgrade suggestions",
     ],
@@ -54,22 +58,36 @@ export function Pricing() {
   return (
     <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <motion.div
+          className="text-center max-w-2xl mx-auto mb-16"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-balance">
             Try it for free!
           </h2>
           <p className="text-muted-foreground text-lg">
-            Try the beta version now without charges 
+            Try the beta version now without charges
           </p>
-        </div>
+        </motion.div>
 
-        <div className="flex justify-center gap-6 max-w-5xl mx-auto">
+        <motion.div
+          className="flex justify-center gap-6 max-w-5xl mx-auto"
+          variants={stagger(0.1)}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           {plans.map((plan, index) => (
-            <div 
+            <motion.div
               key={index}
+              variants={scaleIn}
+              whileHover={{ y: -4 }}
               className={`relative bg-card rounded-2xl border p-6 ${
-                plan.popular 
-                  ? "border-accent shadow-lg scale-105" 
+                plan.popular
+                  ? "border-accent shadow-lg scale-105"
                   : "border-border"
               }`}
             >
@@ -96,16 +114,16 @@ export function Pricing() {
                 ))}
               </ul>
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 variant={plan.popular ? "default" : "outline"}
                 asChild
               >
                 <Link href="/register">{plan.cta}</Link>
               </Button>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

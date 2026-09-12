@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const subscription = useQuery({ queryKey: ["subscription"], queryFn: getSubscriptionInfo });
   const [profile, setProfile] = useState({ firstName: "", lastName: "", email: "" });
   const [passwords, setPasswords] = useState({ currentPassword: "", newPassword: "" });
+  const [isModified, setIsModified] = useState(false);
 
   useEffect(() => {
     if (user) setProfile({ firstName: user.firstName, lastName: user.lastName, email: user.email });
@@ -26,7 +27,7 @@ export default function SettingsPage() {
 
   const profileMutation = useMutation({
     mutationFn: () => updateUser(profile),
-    onSuccess: (updatedUser) => queryClient.setQueryData(["currentUser"], updatedUser),
+    onSuccess: (updatedUser) => {queryClient.setQueryData(["currentUser"], updatedUser); setIsModified(false);},
   });
   const passwordMutation = useMutation({
     mutationFn: () => changePassword(passwords),
@@ -41,13 +42,13 @@ export default function SettingsPage() {
         <CardContent>
           <form className="space-y-6" onSubmit={(event) => { event.preventDefault(); profileMutation.mutate(); }}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2"><Label htmlFor="firstName">First name</Label><Input id="firstName" value={profile.firstName} onChange={(event) => setProfile({ ...profile, firstName: event.target.value })} /></div>
-              <div className="space-y-2"><Label htmlFor="lastName">Last name</Label><Input id="lastName" value={profile.lastName} onChange={(event) => setProfile({ ...profile, lastName: event.target.value })} /></div>
+              <div className="space-y-2"><Label htmlFor="firstName">First name</Label><Input id="firstName" value={profile.firstName} onChange={(event) => {setProfile({ ...profile, firstName: event.target.value }); setIsModified(true); } } /></div>
+              <div className="space-y-2"><Label htmlFor="lastName">Last name</Label><Input id="lastName" value={profile.lastName} onChange={(event) => {setProfile({ ...profile, lastName: event.target.value }); setIsModified(true);} } /></div>
             </div>
-            <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={profile.email} onChange={(event) => setProfile({ ...profile, email: event.target.value })} /></div>
+            <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" value={profile.email} onChange={(event) => {setProfile({ ...profile, email: event.target.value }); setIsModified(true); } }/></div>
             {profileMutation.isError && <Alert variant="destructive"><AlertTitle>Unable to save profile</AlertTitle><AlertDescription>{profileMutation.error.message}</AlertDescription></Alert>}
             {profileMutation.isSuccess && <p className="text-sm text-success">Profile updated successfully.</p>}
-            <div className="flex justify-end"><Button type="submit" disabled={profileMutation.isPending}>{profileMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}{profileMutation.isPending ? "Saving..." : "Save Changes"}</Button></div>
+            <div className="flex justify-end"><Button type="submit" disabled={!isModified || profileMutation.isPending}>{profileMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}{profileMutation.isPending ? "Saving..." : "Save Changes"}</Button></div>
           </form>
         </CardContent>
       </Card>

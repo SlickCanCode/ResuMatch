@@ -1,4 +1,8 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Upload, Cpu, FileCheck, Rocket } from "lucide-react";
+import { fadeUp, stagger } from "@/lib/motion";
 
 const steps = [
   {
@@ -31,18 +35,30 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <motion.div
+          className="text-center max-w-2xl mx-auto mb-16"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-balance">
             How ResuMatch Works
           </h2>
           <p className="text-muted-foreground text-lg">
             Four simple steps to transform your resume into a job-winning document.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <motion.div
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8"
+          variants={stagger(0.15)}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           {steps.map((step, index) => (
-            <div key={index} className="relative">
+            <motion.div key={index} variants={fadeUp} className="relative">
               <div className="text-6xl font-bold text-secondary mb-4">
                 {step.step}
               </div>
@@ -54,11 +70,17 @@ export function HowItWorks() {
                 {step.description}
               </p>
               {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute top-12 left-full w-full h-px bg-border -translate-x-1/2" />
+                <motion.div
+                  className="hidden lg:block absolute top-12 left-full w-full h-px bg-border -translate-x-1/2 origin-left"
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.3 + index * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                />
               )}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

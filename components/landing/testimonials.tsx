@@ -1,4 +1,8 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { fadeUp, stagger } from "@/lib/motion";
 
 const testimonials = [
   {
@@ -21,30 +25,60 @@ const testimonials = [
   }
 ];
 
+const starVariants = {
+  hidden: { opacity: 0, scale: 0 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { type: "spring" as const, stiffness: 400, damping: 15 }
+  },
+};
+
 export function Testimonials() {
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-secondary/30">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <motion.div
+          className="text-center max-w-2xl mx-auto mb-16"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        >
           <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-balance">
             Already Trusted by job seekers
           </h2>
           <p className="text-muted-foreground text-lg">
             See what our users have to say about their experience with ResuMatch.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <motion.div
+          className="grid md:grid-cols-3 gap-6"
+          variants={stagger(0.12)}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           {testimonials.map((testimonial, index) => (
-            <div 
+            <motion.div
               key={index}
+              variants={fadeUp}
               className="bg-card rounded-2xl border border-border p-6 hover:shadow-lg transition-shadow duration-300"
             >
-              <div className="flex gap-1 mb-4">
+              <motion.div
+                className="flex gap-1 mb-4"
+                variants={stagger(0.06)}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+              >
                 {Array.from({ length: testimonial.rating }).map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-warning text-warning" />
+                  <motion.div key={i} variants={starVariants}>
+                    <Star className="w-4 h-4 fill-warning text-warning" />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
               <p className="text-foreground mb-6 leading-relaxed">
                 &quot;{testimonial.content}&quot;
               </p>
@@ -52,9 +86,9 @@ export function Testimonials() {
                 <p className="font-semibold">{testimonial.name}</p>
                 <p className="text-sm text-muted-foreground">{testimonial.role}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
