@@ -125,7 +125,7 @@ export default function HistoryPage() {
       ) : isError ? (
         <Alert variant="destructive">
           <AlertTitle>Unable to load analysis history</AlertTitle>
-          <AlertDescription>{error.message}</AlertDescription>
+          <AlertDescription className="break-words">{error.message}</AlertDescription>
           <Button variant="outline" size="sm" className="mt-4" onClick={() => refetch()}>
             Try again
           </Button>
@@ -134,10 +134,10 @@ export default function HistoryPage() {
         isMobile || viewMode === "grid" ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredHistory.map((item) => (
-              <Card key={item.id} className="transition-shadow hover:shadow-lg">
+              <Card key={item.id} className="min-w-0 transition-shadow hover:shadow-lg">
                 <CardContent className="p-6">
                   <div className="mb-4 flex items-start justify-between">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${getScoreBadgeColor(item.score)}`}>
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${getScoreBadgeColor(item.score)}`}>
                       <FileText className={`h-6 w-6 ${getScoreColor(item.score)}`} />
                     </div>
                     <DropdownMenu>
@@ -151,7 +151,7 @@ export default function HistoryPage() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
-                  <h3 className="mb-1 truncate text-sm font-medium">{item.resumeName}</h3>
+                  <h3 className="mb-1 truncate text-sm font-medium" title={item.resumeName}>{item.resumeName}</h3>
                   <p className="mb-4 text-xs text-muted-foreground">{formatRelativeTime(item.dateTime)}</p>
                   <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
                     <div><p className="text-xs text-muted-foreground">Score</p><p className={`text-xl font-bold ${getScoreColor(item.score)}`}>{item.score}%</p></div>
@@ -174,22 +174,22 @@ export default function HistoryPage() {
               {filteredHistory.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
+                  className="flex items-center justify-between gap-4 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
                 >
-                  <div className="flex items-center gap-4 min-w-0">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
                     <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center shrink-0">
                       <FileText className="w-5 h-5 text-muted-foreground" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{item.resumeName}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate" title={item.resumeName}>{item.resumeName}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                        <Calendar className="w-3 h-3" />
+                        <Calendar className="w-3 h-3 shrink-0" />
                         {formatRelativeTime(item.dateTime)}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-6 shrink-0">
                     <div className="hidden sm:flex items-center gap-4">
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground">Score</p>

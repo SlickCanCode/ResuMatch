@@ -134,7 +134,7 @@ export default function NewAnalysisPage() {
           {uploadMutation.isError && (
                    <Alert variant="destructive" className="mb-2.5">
                       <AlertTitle>Api Error</AlertTitle>
-                      <AlertDescription>
+                      <AlertDescription className="break-words">
                         {uploadMutation.error.message}
                       </AlertDescription>
                     </Alert>
@@ -175,13 +175,13 @@ export default function NewAnalysisPage() {
               </div>
             </div>
           ) : (
-            <div className="flex min-w-0 items-center justify-between p-4 rounded-xl bg-secondary/50">
-              <div className="flex min-w-0 items-center gap-4">
-                <div className="w-12 h-12 min-w-0 rounded-xl bg-background flex items-center justify-center">
+            <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-secondary/50">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
+                <div className="w-12 h-12 shrink-0 rounded-xl bg-background flex items-center justify-center">
                   <FileText className="w-6 h-6 text-accent" />
                 </div>
-                <div className="min-w-0">
-                  <p className="font-medium">{file.name}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate" title={file.name}>{file.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
@@ -190,6 +190,7 @@ export default function NewAnalysisPage() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="shrink-0"
                 onClick={() => {
                   setFile(null);
                   setIsWaitingToUpload(false);
@@ -205,7 +206,7 @@ export default function NewAnalysisPage() {
           {isWaitingToUpload && (
             <div className="mt-4 flex items-center min-w-0 gap-3 rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm">
               <Clock3 className="h-5 w-5 shrink-0 text-accent" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium">Reviewing your file</p>
                 <p className="text-muted-foreground">Upload starts in a few seconds. You can still replace it.</p>
               </div>
@@ -215,7 +216,7 @@ export default function NewAnalysisPage() {
           {uploadMutation.isPending && (
             <div className="mt-4 flex min-w-0 items-center gap-3 rounded-xl border border-border bg-secondary/40 p-4 text-sm">
               <Loader2 className="h-5 w-5 shrink-0 animate-spin text-accent" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="font-medium">{uploadStage}</p>
                 <p className="text-muted-foreground">Your file is locked while we process it.</p>
               </div>
@@ -225,39 +226,39 @@ export default function NewAnalysisPage() {
              <Card className="mt-2.5">
             <CardHeader className="flex min-w-0 flex-row items-center justify-between gap-4">
               <CardTitle className="text-lg flex min-w-0 items-center gap-2">
-                <FileText className="w-5 h-5" />
+                <FileText className="w-5 h-5 shrink-0" />
                 Resume Preview
               </CardTitle>
-              <Button type="button" variant="outline" size="sm" aria-expanded={isPreviewVisible} onClick={() => setIsPreviewVisible((visible) => !visible)} className={isPreviewVisible ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}>
+              <Button type="button" variant="outline" size="sm" aria-expanded={isPreviewVisible} onClick={() => setIsPreviewVisible((visible) => !visible)} className={`shrink-0 ${isPreviewVisible ? "bg-accent text-accent-foreground hover:bg-accent/90" : ""}`}>
                 {isPreviewVisible ? "Hide" : "Show"}
               </Button>
             </CardHeader>
             {isPreviewVisible && <CardContent className="space-y-6 min-w-0">
               {/* Contact Info */}
               <div className="min-w-0">
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-lg break-words">
                   {resume.fullName ? `${resume.fullName}` : "Loading..."}
                 </h3>
-                <p className="text-sm text-muted-foreground">{resume?.email ?? ""}</p>
-                <p className="text-sm text-muted-foreground">{resume.phone}</p>
-                <p className="text-sm text-muted-foreground">{resume.location}</p>
+                <p className="text-sm text-muted-foreground break-words">{resume?.email ?? ""}</p>
+                <p className="text-sm text-muted-foreground break-words">{resume.phone}</p>
+                <p className="text-sm text-muted-foreground break-words">{resume.location}</p>
               </div>
 
               {/* Summary */}
-              <div>
+              <div className="min-w-0">
                 <h4 className="font-medium text-sm text-muted-foreground mb-2">SUMMARY</h4>
-                <p className="text-sm">{resume.summary}</p>
+                <p className="text-sm break-words">{resume.summary}</p>
               </div>
 
               {/* Skills */}
-              <div>
+              <div className="min-w-0">
                 <h4 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-2">
-                  <Code className="w-4 h-4" />
+                  <Code className="w-4 h-4 shrink-0" />
                   SKILLS
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {resume.skills.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
+                    <Badge key={index} variant="secondary" className="text-xs max-w-full break-words">
                       {skill}
                     </Badge>
                   ))}
@@ -265,21 +266,21 @@ export default function NewAnalysisPage() {
               </div>
 
               {/* Experience */}
-              <div>
+              <div className="min-w-0">
                 <h4 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-2">
-                  <Briefcase className="w-4 h-4" />
+                  <Briefcase className="w-4 h-4 shrink-0" />
                   EXPERIENCE
                 </h4>
                 <div className="space-y-4">
                   {resume.experience.map((exp, index) => (
-                    <div key={index}>
-                      <p className="font-medium text-sm">{exp.title}</p>
-                      <p className="text-xs text-muted-foreground">{exp.company} | {exp.period}</p>
+                    <div key={index} className="min-w-0">
+                      <p className="font-medium text-sm break-words">{exp.title}</p>
+                      <p className="text-xs text-muted-foreground break-words">{exp.company} | {exp.period}</p>
                       <ul className="mt-2 space-y-1">
                         {exp.highlights.map((highlight, i) => (
                           <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                            <span className="text-accent mt-1">•</span>
-                            {highlight}
+                            <span className="text-accent mt-1 shrink-0">•</span>
+                            <span className="min-w-0 flex-1 break-words">{highlight}</span>
                           </li>
                         ))}
                       </ul>
@@ -289,15 +290,15 @@ export default function NewAnalysisPage() {
               </div>
 
               {/* Education */}
-              <div>
+              <div className="min-w-0">
                 <h4 className="font-medium text-sm text-muted-foreground mb-2 flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4" />
+                  <GraduationCap className="w-4 h-4 shrink-0" />
                   EDUCATION
                 </h4>
                 {resume.education.map((edu, index) => (
-                  <div key={index}>
-                    <p className="font-medium text-sm">{edu.degree}</p>
-                    <p className="text-xs text-muted-foreground">{edu.school}, {edu.year}</p>
+                  <div key={index} className="min-w-0">
+                    <p className="font-medium text-sm break-words">{edu.degree}</p>
+                    <p className="text-xs text-muted-foreground break-words">{edu.school}, {edu.year}</p>
                   </div>
                 ))}
               </div>
@@ -320,7 +321,7 @@ export default function NewAnalysisPage() {
           {analysisMutation.isError && (
             <Alert variant="destructive" className="mt-4">
               <AlertTitle>Analysis failed</AlertTitle>
-              <AlertDescription>{analysisMutation.error.message}</AlertDescription>
+              <AlertDescription className="break-words">{analysisMutation.error.message}</AlertDescription>
             </Alert>
           )}
         </CardContent>

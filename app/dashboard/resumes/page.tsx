@@ -97,7 +97,7 @@ export default function ResumesPage() {
       ) : isError ? (
         <Alert variant="destructive">
           <AlertTitle>Unable to load resumes</AlertTitle>
-          <AlertDescription>{error.message}</AlertDescription>
+          <AlertDescription className="break-words">{error.message}</AlertDescription>
           <Button variant="outline" size="sm" className="mt-4" onClick={() => refetch()}>
             Try again
           </Button>
@@ -143,10 +143,10 @@ export default function ResumesPage() {
         isMobile || viewMode === "grid" ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredResumes.map((resume) => (
-              <Card key={resume.id} className="hover:shadow-lg transition-shadow">
+              <Card key={resume.id} className="min-w-0 hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getScoreBgColor(resume.latestScore)}`}>
+                    <div className={`w-12 h-12 shrink-0 rounded-xl flex items-center justify-center ${getScoreBgColor(resume.latestScore)}`}>
                       <FileText className={`w-6 h-6 ${getScoreColor(resume.latestScore)}`} />
                     </div>
                     <DropdownMenu>
@@ -170,7 +170,7 @@ export default function ResumesPage() {
                     </DropdownMenu>
                   </div>
 
-                    <h3 className="font-medium text-sm mb-1 truncate">{resume.name}</h3>
+                    <h3 className="font-medium text-sm mb-1 truncate" title={resume.name}>{resume.name}</h3>
                   <p className="text-xs text-muted-foreground mb-4">
                     Uploaded {resume.uploadDate}
                   </p>
@@ -212,21 +212,21 @@ export default function ResumesPage() {
                 {filteredResumes.map((resume) => (
                   <div
                     key={resume.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
+                    className="flex items-center justify-between gap-4 p-4 rounded-xl bg-secondary/50 hover:bg-secondary transition-colors"
                   >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getScoreBgColor(resume.latestScore)}`}>
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${getScoreBgColor(resume.latestScore)}`}>
                         <FileText className={`w-5 h-5 ${getScoreColor(resume.latestScore)}`} />
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{resume.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate" title={resume.name}>{resume.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           Uploaded {resume.uploadDate}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-6 shrink-0">
                       <div className="hidden sm:flex items-center gap-4">
                         <div className="text-center">
                           <p className="text-xs text-muted-foreground">Score</p>
