@@ -9,23 +9,31 @@ async function proxyRequest(
 ) {
   const { path } = await context.params;
 
-  const backendUrl = `${BACKEND_URL}/${path.join("/")}${request.nextUrl.search}`;
+  const backendUrl =
+    `${BACKEND_URL}/${path.join("/")}${request.nextUrl.search}`;
 
   const headers = new Headers();
 
-  // Forward the browser's cookies to Spring Boot
+  // Forward cookies
   const cookie = request.headers.get("cookie");
-
   if (cookie) {
     headers.set("cookie", cookie);
   }
 
   // Forward content type
   const contentType = request.headers.get("content-type");
-
   if (contentType) {
     headers.set("content-type", contentType);
   }
+
+  // Tell Spring the original request came from Vercel
+  const host = request.headers.get("host");
+
+  if (host) {
+    headers.set("x-forwarded-host", host);
+  }
+
+  headers.set("x-forwarded-proto", "https");
 
   const body =
     request.method === "GET" || request.method === "HEAD"
@@ -39,15 +47,16 @@ async function proxyRequest(
     redirect: "manual",
   });
 
-
   const responseHeaders = new Headers();
 
+  // Forward redirects
   const location = backendResponse.headers.get("location");
 
   if (location) {
     responseHeaders.set("location", location);
   }
-  // Forward normal response headers
+
+  // Forward content type
   const responseContentType =
     backendResponse.headers.get("content-type");
 
@@ -55,8 +64,7 @@ async function proxyRequest(
     responseHeaders.set("content-type", responseContentType);
   }
 
-  // IMPORTANT:
-  // Forward Set-Cookie headers from Spring Boot to the browser.
+  // Forward cookies
   const setCookies = backendResponse.headers.getSetCookie();
 
   for (const cookie of setCookies) {
@@ -74,4 +82,3 @@ export const POST = proxyRequest;
 export const PUT = proxyRequest;
 export const PATCH = proxyRequest;
 export const DELETE = proxyRequest;
-
